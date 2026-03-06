@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw assets (source files for pipeline)
+/raw-assets/
+
+# debug/test screenshots
+*.png
+!public/**/*.png
+
+# playwright MCP
+.playwright-mcp/
+
+# shadcn config
+components.json

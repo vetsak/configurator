@@ -1,0 +1,27 @@
+'use client';
+
+import { SupportIcon } from '@/components/icons';
+
+export function FaqSection() {
+  return (
+    <section className="bg-white px-[18px] py-[20px]">
+      <div className="flex flex-col gap-[11px] rounded-[12px] bg-[#eee] px-[15px] py-[21px]">
+        <SupportIcon className="h-[30px] w-[30px]" />
+
+        <p className="text-[21px] font-medium text-black w-[349px]">
+          Do you have any questions?
+        </p>
+
+        <p className="text-[13px] text-black w-[349px]">
+          Our team is looking forward to help you or consult you with any question
+        </p>
+
+        <div>
+          <button className="rounded-[50px] border-[0.7px] border-[#111] bg-[#111] px-[12px] py-[7px] text-[12px] text-white">
+            Book your consultation
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

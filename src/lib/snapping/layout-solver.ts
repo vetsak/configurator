@@ -1,0 +1,369 @@
+import type { PlacedModule } from '@/types/configurator';
+import type { Preset } from '@/types/configurator';
+import { MODULE_CATALOG } from '@/lib/config/modules';
+import { PRESETS } from '@/lib/config/presets';
+import { createPlacedModule, connectModules } from './engine';
+import type { SofaShape } from './shape-detector';
+import { computeSideSnap } from './side-placement';
+
+/**
+ * Build a linear (left-to-right) sofa using cursor-based placement.
+ *
+ * Uses a simple X cursor for positioning (proven flush alignment),
+ * then connects adjacent modules via the anchor graph.
+ *
+ * O(n) where n = number of modules
+ */
+export function buildLinear(moduleIds: string[]): PlacedModule[] {
+  if (moduleIds.length === 0) return [];
+
+  const placed: PlacedModule[] = [];
+  let cursor = 0; // tracks the right edge X position
+
+  for (let i = 0; i < moduleIds.length; i++) {
+    const moduleId = moduleIds[i];
+    const catalog = MODULE_CATALOG[moduleId];
+    if (!catalog) throw new Error(`Module not found: ${moduleId}`);
+
+    const isLeftSide = i === 0 && catalog.type === 'side';
+    const isRightSide = i === moduleIds.length - 1 && catalog.type === 'side' && i > 0;
+    const isSide = catalog.type === 'side';
+
+    // Sides rotated 90deg: their depth becomes X extent after rotation
+    const extentX = isSide ? catalog.dimensions.depth / 2 : catalog.dimensions.width / 2;
+
+    let rotation: [number, number, number] = [0, 0, 0];
+    if (isLeftSide) {
+      rotation = [0, -Math.PI / 2, 0];
+    } else if (isRightSide) {
+      rotation = [0, Math.PI / 2, 0];
+    }
+
+    const x = cursor + extentX;
+    const mod = createPlacedModule(moduleId, [x, 0, 0], rotation);
+    placed.push(mod);
+    cursor = x + extentX;
+  }
+
+  // Connect adjacent modules via anchor graph
+  for (let i = 0; i < placed.length - 1; i++) {
+    const left = placed[i];
+    const right = placed[i + 1];
+    const leftCatalog = MODULE_CATALOG[left.moduleId];
+    const rightCatalog = MODULE_CATALOG[right.moduleId];
+    if (!leftCatalog || !rightCatalog) continue;
+
+    const leftAnchorId = leftCatalog.type === 'side' ? 'inner' : 'right';
+    const rightAnchorId = rightCatalog.type === 'side' ? 'inner' : 'left';
+
+    connectModules(left, leftAnchorId, right, rightAnchorId);
+  }
+
+  // Center the sofa around origin X
+  if (placed.length > 0) {
+    const totalWidth = cursor;
+    const offset = totalWidth / 2;
+    for (const mod of placed) {
+      mod.position[0] -= offset;
+    }
+  }
+
+  return placed;
+}
+
+/**
+ * Resolve a preset into an ordered list of module IDs for linear layout.
+ * Convention: sides go on the outside, seats in the middle.
+ */
+function presetToModuleIds(preset: Preset): string[] {
+  const sides = preset.modules.filter((m) => m.moduleId.startsWith('side-'));
+  const seats = preset.modules.filter((m) => m.moduleId.startsWith('seat-'));
+
+  const moduleIds: string[] = [];
+
+  // Left side
+  if (sides.length > 0) {
+    moduleIds.push(sides[0].moduleId);
+  }
+
+  // Seats in the middle
+  for (const seat of seats) {
+    for (let i = 0; i < seat.count; i++) {
+      moduleIds.push(seat.moduleId);
+    }
+  }
+
+  // Right side
+  if (sides.length > 0) {
+    const rightSide = sides.length > 1 ? sides[1] : sides[0];
+    moduleIds.push(rightSide.moduleId);
+  }
+
+  return moduleIds;
+}
+
+/**
+ * Build a shaped sofa layout (L-shape, U-shape, or linear).
+ *
+ * Wing seats extend in +Z (forward) from the main row via "front" anchors.
+ *
+ * Anchor math for rotated wing seats:
+ *   Right wing (rotY = PI/2): "right" at [halfW,0,0] → rotated [0,0,-halfW], dir → [0,0,-1] (opposes front's +Z)
+ *   Left wing  (rotY = -PI/2): "left" at [-halfW,0,0] → rotated [0,0,-halfW], dir → [0,0,-1] (opposes front's +Z)
+ *   So both wings connect to the main row's "front" anchor via their inward-facing anchor.
+ */
+export function buildShape(
+  shape: SofaShape,
+  mainRowIds: string[],
+  leftWingIds: string[] = [],
+  rightWingIds: string[] = [],
+  sideIds: string[] = []
+): PlacedModule[] {
+  if (shape === 'linear') {
+    const allIds = sideIds.length >= 2
+      ? [sideIds[0], ...mainRowIds, sideIds[1]]
+      : sideIds.length === 1
+        ? [sideIds[0], ...mainRowIds]
+        : mainRowIds;
+    return buildLinear(allIds);
+  }
+
+  const placed: PlacedModule[] = [];
+
+  // 1. Build main row (left-to-right, no rotation)
+  let cursor = 0;
+  for (const moduleId of mainRowIds) {
+    const catalog = MODULE_CATALOG[moduleId];
+    if (!catalog) continue;
+    const halfW = catalog.dimensions.width / 2;
+    const x = cursor + halfW;
+    placed.push(createPlacedModule(moduleId, [x, 0, 0]));
+    cursor = x + halfW;
+  }
+
+  // Connect main row left-to-right
+  for (let i = 0; i < placed.length - 1; i++) {
+    connectModules(placed[i], 'right', placed[i + 1], 'left');
+  }
+
+  // 2. Build left wing (extends in +Z from first main row seat)
+  if (leftWingIds.length > 0 && placed.length > 0) {
+    buildWing(placed, placed[0], leftWingIds, -Math.PI / 2, 'front', 'left', 'right');
+  }
+
+  // 3. Build right wing (extends in +Z from last main row seat)
+  if (rightWingIds.length > 0 && placed.length > 0) {
+    buildWing(placed, placed[mainRowIds.length - 1], rightWingIds, Math.PI / 2, 'front', 'right', 'left');
+  }
+
+  // 4. Center all seats around bounding box center
+  centerModules(placed);
+
+  // 5. Place side modules on exposed edges
+  if (sideIds.length > 0 && placed.length > 0) {
+    placed.push(...placeSidesOnExposedEdges(placed, sideIds));
+  }
+
+  return placed;
+}
+
+/**
+ * Build a perpendicular wing from a corner seat, extending in +Z.
+ *
+ * @param placed - Array to push new modules into
+ * @param cornerSeat - The main row seat where the wing starts
+ * @param wingIds - Module IDs for the wing
+ * @param rotY - Rotation for wing seats (PI/2 for right wing, -PI/2 for left)
+ * @param cornerAnchor - Which anchor on the corner seat to connect (always "front")
+ * @param firstWingAnchor - Which anchor on the first wing seat faces the main row
+ * @param nextWingAnchor - Which anchor on subsequent wing seats faces away (+Z)
+ */
+function buildWing(
+  placed: PlacedModule[],
+  cornerSeat: PlacedModule,
+  wingIds: string[],
+  rotY: number,
+  cornerAnchor: string,
+  firstWingAnchor: string,
+  nextWingAnchor: string
+): void {
+  let prevModule = cornerSeat;
+  let prevAnchorId = cornerAnchor;
+  let wingAnchorId = firstWingAnchor;
+
+  for (const wingId of wingIds) {
+    const catalog = MODULE_CATALOG[wingId];
+    if (!catalog) continue;
+
+    // Get the world position of the previous module's anchor
+    const prevAnchor = prevModule.anchors.find((a) => a.id === prevAnchorId);
+    if (!prevAnchor) continue;
+
+    const cosP = Math.cos(prevModule.rotation[1]);
+    const sinP = Math.sin(prevModule.rotation[1]);
+    const anchorWorldX = prevModule.position[0] + prevAnchor.position[0] * cosP + prevAnchor.position[2] * sinP;
+    const anchorWorldZ = prevModule.position[2] - prevAnchor.position[0] * sinP + prevAnchor.position[2] * cosP;
+
+    // Get the wing anchor's local position and rotate it
+    const wingAnchorTemplate = catalog.anchorTemplate.find((a) => a.id === wingAnchorId);
+    if (!wingAnchorTemplate) continue;
+
+    const cosW = Math.cos(rotY);
+    const sinW = Math.sin(rotY);
+    const rotatedAnchorX = wingAnchorTemplate.position[0] * cosW + wingAnchorTemplate.position[2] * sinW;
+    const rotatedAnchorZ = -wingAnchorTemplate.position[0] * sinW + wingAnchorTemplate.position[2] * cosW;
+
+    // Wing center = anchor world pos - rotated wing anchor offset
+    const wingX = anchorWorldX - rotatedAnchorX;
+    const wingZ = anchorWorldZ - rotatedAnchorZ;
+
+    const wingMod = createPlacedModule(wingId, [wingX, 0, wingZ], [0, rotY, 0]);
+    placed.push(wingMod);
+    connectModules(prevModule, prevAnchorId, wingMod, wingAnchorId);
+
+    prevModule = wingMod;
+    // After the first connection, subsequent wing seats chain via the outward anchor
+    prevAnchorId = nextWingAnchor;
+    wingAnchorId = firstWingAnchor;
+  }
+}
+
+function centerModules(modules: PlacedModule[]): void {
+  if (modules.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+  for (const mod of modules) {
+    const catalog = MODULE_CATALOG[mod.moduleId];
+    if (!catalog) continue;
+    const cos = Math.abs(Math.cos(mod.rotation[1]));
+    const sin = Math.abs(Math.sin(mod.rotation[1]));
+    const halfExtentX = (catalog.dimensions.width * cos + catalog.dimensions.depth * sin) / 2;
+    const halfExtentZ = (catalog.dimensions.width * sin + catalog.dimensions.depth * cos) / 2;
+    minX = Math.min(minX, mod.position[0] - halfExtentX);
+    maxX = Math.max(maxX, mod.position[0] + halfExtentX);
+    minZ = Math.min(minZ, mod.position[2] - halfExtentZ);
+    maxZ = Math.max(maxZ, mod.position[2] + halfExtentZ);
+  }
+  const offsetX = (minX + maxX) / 2;
+  const offsetZ = (minZ + maxZ) / 2;
+  for (const mod of modules) {
+    mod.position[0] -= offsetX;
+    mod.position[2] -= offsetZ;
+  }
+}
+
+/**
+ * Place side modules on exposed (unoccupied) left/right edges of the sofa.
+ * Finds the two most "outer" free anchors and places sides there.
+ */
+function placeSidesOnExposedEdges(
+  seats: PlacedModule[],
+  sideIds: string[]
+): PlacedModule[] {
+  const sides: PlacedModule[] = [];
+
+  // Collect all free left/right anchors from seats
+  const freeEdges: { module: PlacedModule; anchorId: string; worldX: number; worldZ: number }[] = [];
+
+  for (const seat of seats) {
+    for (const anchor of seat.anchors) {
+      if (anchor.occupied) continue;
+      if (anchor.id !== 'left' && anchor.id !== 'right') continue;
+
+      const cosR = Math.cos(seat.rotation[1]);
+      const sinR = Math.sin(seat.rotation[1]);
+      const wx = seat.position[0] + anchor.position[0] * cosR + anchor.position[2] * sinR;
+      const wz = seat.position[2] - anchor.position[0] * sinR + anchor.position[2] * cosR;
+      const wdx = anchor.direction[0] * cosR + anchor.direction[2] * sinR;
+      const wdz = -anchor.direction[0] * sinR + anchor.direction[2] * cosR;
+
+      freeEdges.push({ module: seat, anchorId: anchor.id, worldX: wx, worldZ: wz });
+    }
+  }
+
+  if (freeEdges.length === 0) return sides;
+
+  // Sort by world X to find leftmost and rightmost exposed edges
+  freeEdges.sort((a, b) => a.worldX - b.worldX);
+
+  // Place first side at the leftmost free edge
+  if (sideIds.length >= 1) {
+    const leftEdge = freeEdges[0];
+    const sideId = sideIds[0];
+    const sideCatalog = MODULE_CATALOG[sideId];
+    if (sideCatalog) {
+      const anchor = leftEdge.module.anchors.find((a) => a.id === leftEdge.anchorId);
+      if (anchor) {
+        const cosR = Math.cos(leftEdge.module.rotation[1]);
+        const sinR = Math.sin(leftEdge.module.rotation[1]);
+        const anchorWorldPos: [number, number, number] = [
+          leftEdge.module.position[0] + anchor.position[0] * cosR + anchor.position[2] * sinR,
+          0,
+          leftEdge.module.position[2] - anchor.position[0] * sinR + anchor.position[2] * cosR,
+        ];
+        const anchorWorldDir: [number, number, number] = [
+          anchor.direction[0] * cosR + anchor.direction[2] * sinR,
+          0,
+          -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
+        ];
+        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+        const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
+        connectModules(leftEdge.module, leftEdge.anchorId, sideMod, 'inner');
+        sides.push(sideMod);
+      }
+    }
+  }
+
+  // Place second side at the rightmost free edge
+  if (sideIds.length >= 2 && freeEdges.length >= 2) {
+    const rightEdge = freeEdges[freeEdges.length - 1];
+    const sideId = sideIds[1];
+    const sideCatalog = MODULE_CATALOG[sideId];
+    if (sideCatalog) {
+      const anchor = rightEdge.module.anchors.find((a) => a.id === rightEdge.anchorId);
+      if (anchor) {
+        const cosR = Math.cos(rightEdge.module.rotation[1]);
+        const sinR = Math.sin(rightEdge.module.rotation[1]);
+        const anchorWorldPos: [number, number, number] = [
+          rightEdge.module.position[0] + anchor.position[0] * cosR + anchor.position[2] * sinR,
+          0,
+          rightEdge.module.position[2] - anchor.position[0] * sinR + anchor.position[2] * cosR,
+        ];
+        const anchorWorldDir: [number, number, number] = [
+          anchor.direction[0] * cosR + anchor.direction[2] * sinR,
+          0,
+          -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
+        ];
+        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+        const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
+        connectModules(rightEdge.module, rightEdge.anchorId, sideMod, 'inner');
+        sides.push(sideMod);
+      }
+    }
+  }
+
+  return sides;
+}
+
+/**
+ * Apply a preset by name — resolves it to placed modules.
+ */
+export function applyPreset(presetId: string): PlacedModule[] {
+  const preset = PRESETS[presetId];
+  if (!preset) throw new Error(`Preset not found: ${presetId}`);
+
+  // Non-linear presets use buildShape
+  if (preset.shape && preset.shape !== 'linear') {
+    return buildShape(
+      preset.shape,
+      preset.mainRowIds ?? [],
+      preset.leftWingIds ?? [],
+      preset.rightWingIds ?? [],
+      preset.sideIds ?? []
+    );
+  }
+
+  const moduleIds = presetToModuleIds(preset);
+  return buildLinear(moduleIds);
+}
