@@ -10,6 +10,7 @@ export function PriceBar() {
   const selectedMaterial = useStore((s) => s.selectedMaterial);
   const addToCart = useStore((s) => s.addToCart);
   const showNotification = useStore((s) => s.showNotification);
+  const inlinePriceVisible = useStore((s) => s.inlinePriceVisible);
   const original = Math.round(total * 1.1);
   const savings = original - total;
 
@@ -27,7 +28,7 @@ export function PriceBar() {
   }, [addToCart, total, modules.length, selectedMaterial, showNotification]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 lg:relative lg:inset-auto lg:z-auto">
+    <div className={`fixed inset-x-0 bottom-0 z-20 lg:relative lg:inset-auto lg:z-auto transition-transform duration-300 ${inlinePriceVisible ? 'translate-y-full lg:translate-y-full' : 'translate-y-0'}`}>
       <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px] lg:max-w-none lg:rounded-none lg:bg-white lg:shadow-[0px_-1px_12px_0px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-between px-[18px] py-[9px]">
           <div className="flex w-[160px] flex-col items-start pb-[3px]">

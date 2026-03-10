@@ -1,16 +1,31 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { useSofaPrice } from '@/hooks/use-sofa-price';
+import { useStore } from '@/stores';
 
 export function InlinePriceSection() {
   const { total } = useSofaPrice();
+  const setInlinePriceVisible = useStore((s) => s.setInlinePriceVisible);
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInlinePriceVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [setInlinePriceVisible]);
   const original = Math.round(total * 1.1);
   const savings = original - total;
 
   const fmt = (n: number) => n.toLocaleString('de-DE');
 
   return (
-    <section className="bg-white py-[15px] flex flex-col gap-[3px] items-center text-center">
+    <section ref={ref} className="bg-white py-[15px] flex flex-col gap-[3px] items-center text-center">
       <p className="text-[12px] text-black max-w-[384px]">
         <span className="font-bold line-through">{fmt(original)}&euro;</span>
         <span> | you save </span>
