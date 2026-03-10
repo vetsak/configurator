@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useArExport } from '@/hooks/use-ar-export';
+import { AiRenderModal } from './ai-render-modal';
 
 export function ArPreviewBanner() {
   const { triggerAR, isExporting, isSupported } = useArExport();
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   return (
     <>
@@ -33,11 +36,16 @@ export function ArPreviewBanner() {
               See your sofa in your living room
             </p>
           </div>
-          <button className="shrink-0 rounded-[50px] border-[0.7px] border-[#111] px-[21px] py-[7px] text-[12px] text-[#111]">
+          <button
+            onClick={() => setIsAiModalOpen(true)}
+            className="shrink-0 rounded-[50px] border-[0.7px] border-[#111] px-[21px] py-[7px] text-[12px] text-[#111]"
+          >
             AI Rendering
           </button>
         </div>
       </section>
+
+      <AiRenderModal open={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />
     </>
   );
 }

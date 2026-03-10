@@ -1,0 +1,6 @@
+name = "vetsak-ai-render"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+
+[vars]
+ALLOWED_ORIGINS = "https://configurator-gray.vercel.app,http://localhost:3000,http://localhost:3001,http://localhost:3002"
