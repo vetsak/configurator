@@ -347,26 +347,58 @@ function placeSidesOnExposedEdges(
 }
 
 /**
- * Pick side module ID matching the seat depth at the given edge.
- * Side width should match seat depth for a flush look.
+ * Pick side module ID whose width matches a given dimension (cm).
  *   63cm → side-s (63cm), 84cm → side-m (84cm), 105cm → side-l (105cm)
  */
-function pickSideForSeat(seatModuleId: string): string {
-  const catalog = MODULE_CATALOG[seatModuleId];
-  if (!catalog) return 'side-m';
-  const depthCm = Math.round(catalog.dimensions.depth * 100);
-  if (depthCm <= 63) return 'side-s';
-  if (depthCm <= 84) return 'side-m';
+function pickSideForDimension(cm: number): string {
+  if (cm <= 63) return 'side-s';
+  if (cm <= 84) return 'side-m';
   return 'side-l';
 }
 
 /**
- * Auto-place side modules on the two outermost exposed left/right edges.
- * Strips existing sides, deep-clones seat modules, then places fresh sides.
+ * Place a single side module on a seat's anchor. Returns the placed side.
+ */
+function placeSideOnAnchor(
+  seat: PlacedModule,
+  anchorId: string,
+  sideId: string
+): PlacedModule | null {
+  const sideCatalog = MODULE_CATALOG[sideId];
+  const anchor = seat.anchors.find((a) => a.id === anchorId);
+  if (!sideCatalog || !anchor) return null;
+
+  const cosR = Math.cos(seat.rotation[1]);
+  const sinR = Math.sin(seat.rotation[1]);
+  const anchorWorldPos: [number, number, number] = [
+    seat.position[0] + anchor.position[0] * cosR + anchor.position[2] * sinR,
+    0,
+    seat.position[2] - anchor.position[0] * sinR + anchor.position[2] * cosR,
+  ];
+  const anchorWorldDir: [number, number, number] = [
+    anchor.direction[0] * cosR + anchor.direction[2] * sinR,
+    0,
+    -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
+  ];
+
+  const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+  const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
+  connectModules(seat, anchorId, sideMod, 'inner');
+  return sideMod;
+}
+
+/**
+ * Auto-place side modules on seats.
+ *
+ * Priority:
+ *   1. BACKS — one side per seat with a free "back" anchor (side width matches seat WIDTH)
+ *   2. ARMRESTS — sides on the two outermost free left/right edges (side width matches seat DEPTH)
+ *
+ * Strips existing sides first, then rebuilds from scratch.
  * Returns the full module array (seats + new sides).
  */
 export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
-  // Deep-clone seats only (strip old sides), freeing anchors that were connected to sides
+  // Deep-clone non-side modules, freeing anchors that were connected to sides
   const seats: PlacedModule[] = [];
   const sideInstanceIds = new Set(
     modules.filter((m) => MODULE_CATALOG[m.moduleId]?.type === 'side').map((m) => m.instanceId)
@@ -390,7 +422,6 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
         anchor.occupied = false;
       }
     }
-    // Remove connection entries to sides
     cloned.connectedTo = cloned.connectedTo.filter(
       (c) => !sideInstanceIds.has(c.targetInstanceId)
     );
@@ -400,9 +431,30 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
 
   if (seats.length === 0) return seats;
 
-  // Find the outermost seat at each exposed edge to pick side size
+  const newSides: PlacedModule[] = [];
+
+  // 1. BACKS — place a side on every seat with a free "back" anchor
+  //    Side width must match the seat's WIDTH for a flush backrest.
+  for (const seat of seats) {
+    const catalog = MODULE_CATALOG[seat.moduleId];
+    if (!catalog || catalog.type !== 'seat') continue;
+
+    const backAnchor = seat.anchors.find((a) => a.id === 'back' && !a.occupied);
+    if (!backAnchor) continue;
+
+    const widthCm = Math.round(catalog.dimensions.width * 100);
+    const sideId = pickSideForDimension(widthCm);
+    const side = placeSideOnAnchor(seat, 'back', sideId);
+    if (side) newSides.push(side);
+  }
+
+  // 2. ARMRESTS — place sides on the two outermost free left/right edges
+  //    Side width must match the seat's DEPTH for flush armrests.
   const freeEdges: { module: PlacedModule; anchorId: string; worldX: number }[] = [];
   for (const seat of seats) {
+    const catalog = MODULE_CATALOG[seat.moduleId];
+    if (!catalog || catalog.type !== 'seat') continue;
+
     for (const anchor of seat.anchors) {
       if (anchor.occupied) continue;
       if (anchor.id !== 'left' && anchor.id !== 'right') continue;
@@ -413,15 +465,32 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
     }
   }
 
-  if (freeEdges.length === 0) return seats;
-  freeEdges.sort((a, b) => a.worldX - b.worldX);
+  if (freeEdges.length > 0) {
+    freeEdges.sort((a, b) => a.worldX - b.worldX);
 
-  const sideIds = [
-    pickSideForSeat(freeEdges[0].module.moduleId),
-    pickSideForSeat(freeEdges[freeEdges.length - 1].module.moduleId),
-  ];
+    // Leftmost armrest
+    const leftEdge = freeEdges[0];
+    const leftCatalog = MODULE_CATALOG[leftEdge.module.moduleId];
+    if (leftCatalog) {
+      const depthCm = Math.round(leftCatalog.dimensions.depth * 100);
+      const sideId = pickSideForDimension(depthCm);
+      const side = placeSideOnAnchor(leftEdge.module, leftEdge.anchorId, sideId);
+      if (side) newSides.push(side);
+    }
 
-  const newSides = placeSidesOnExposedEdges(seats, sideIds);
+    // Rightmost armrest
+    if (freeEdges.length >= 2) {
+      const rightEdge = freeEdges[freeEdges.length - 1];
+      const rightCatalog = MODULE_CATALOG[rightEdge.module.moduleId];
+      if (rightCatalog) {
+        const depthCm = Math.round(rightCatalog.dimensions.depth * 100);
+        const sideId = pickSideForDimension(depthCm);
+        const side = placeSideOnAnchor(rightEdge.module, rightEdge.anchorId, sideId);
+        if (side) newSides.push(side);
+      }
+    }
+  }
+
   return [...seats, ...newSides];
 }
 
