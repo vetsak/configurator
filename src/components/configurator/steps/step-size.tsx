@@ -3,7 +3,7 @@
 import { useMemo, useCallback, useRef, useState } from 'react';
 import { useStore } from '@/stores';
 import { MODULE_CATALOG } from '@/lib/config/modules';
-import { buildLinear, buildShape } from '@/lib/snapping/layout-solver';
+import { buildLinear, buildShape, autoPlaceSides } from '@/lib/snapping/layout-solver';
 import { DEPTH_OPTIONS } from '@/lib/config/dummy-data';
 import { InfoIcon } from '@/components/icons';
 import { analyzeShape, getShapeParts } from '@/lib/snapping/shape-detector';
@@ -157,19 +157,16 @@ export function StepSize() {
 
     if (shape === 'linear') {
       const seatIds = buildSeatsForWidth(snapped, currentDepth);
-      const allIds = sideIds.length > 0
-        ? [sideIds[0], ...seatIds, ...(sideIds.length > 1 ? [sideIds[1]] : [])]
-        : seatIds;
-      const placed = buildLinear(allIds);
-      setModules(placed);
+      const placed = buildLinear(seatIds);
+      setModules(autoPlaceSides(placed));
     } else {
       // Shape-preserving resize: only change main row, keep wings
       const parts = getShapeParts(modules);
       const mainRowSeatIds = buildSeatsForWidth(snapped, currentDepth);
       const leftWingIds = parts.leftWing.map((m) => m.moduleId);
       const rightWingIds = parts.rightWing.map((m) => m.moduleId);
-      const placed = buildShape(shape, mainRowSeatIds, leftWingIds, rightWingIds, sideIds);
-      setModules(placed);
+      const placed = buildShape(shape, mainRowSeatIds, leftWingIds, rightWingIds, []);
+      setModules(autoPlaceSides(placed));
     }
   }, [modules, currentDepth, widthSteps, setModules]);
 
@@ -226,26 +223,21 @@ export function StepSize() {
     };
 
     if (shape === 'linear') {
-      const newModuleIds: string[] = [];
+      const seatIds: string[] = [];
       for (const mod of modules) {
         const catalog = MODULE_CATALOG[mod.moduleId];
-        if (!catalog) continue;
-        if (catalog.type === 'side') {
-          newModuleIds.push(mod.moduleId);
-        } else if (catalog.type === 'seat') {
-          newModuleIds.push(mapSeatId(mod.moduleId));
-        }
+        if (!catalog || catalog.type !== 'seat') continue;
+        seatIds.push(mapSeatId(mod.moduleId));
       }
-      const placed = buildLinear(newModuleIds);
-      setModules(placed);
+      const placed = buildLinear(seatIds);
+      setModules(autoPlaceSides(placed));
     } else {
       const parts = getShapeParts(modules);
       const mainRowIds = parts.mainRow.map((m) => mapSeatId(m.moduleId));
       const leftWingIds = parts.leftWing.map((m) => mapSeatId(m.moduleId));
       const rightWingIds = parts.rightWing.map((m) => mapSeatId(m.moduleId));
-      const sideIds = parts.sides.map((m) => m.moduleId);
-      const placed = buildShape(shape, mainRowIds, leftWingIds, rightWingIds, sideIds);
-      setModules(placed);
+      const placed = buildShape(shape, mainRowIds, leftWingIds, rightWingIds, []);
+      setModules(autoPlaceSides(placed));
     }
 
     if (substituted) {
