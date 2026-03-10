@@ -388,12 +388,10 @@ function placeSideOnAnchor(
 }
 
 /**
- * Auto-place side modules on seats.
+ * Auto-place side modules as armrests on the two outermost exposed
+ * left/right edges — matching the vetsak website preset orientation.
  *
- * Priority:
- *   1. BACKS — one side per seat with a free "back" anchor (side width matches seat WIDTH)
- *   2. ARMRESTS — sides on the two outermost free left/right edges (side width matches seat DEPTH)
- *
+ * Side width matches the seat's DEPTH for flush armrests.
  * Strips existing sides first, then rebuilds from scratch.
  * Returns the full module array (seats + new sides).
  */
@@ -433,23 +431,7 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
 
   const newSides: PlacedModule[] = [];
 
-  // 1. BACKS — place a side on every seat with a free "back" anchor
-  //    Side width must match the seat's WIDTH for a flush backrest.
-  for (const seat of seats) {
-    const catalog = MODULE_CATALOG[seat.moduleId];
-    if (!catalog || catalog.type !== 'seat') continue;
-
-    const backAnchor = seat.anchors.find((a) => a.id === 'back' && !a.occupied);
-    if (!backAnchor) continue;
-
-    const widthCm = Math.round(catalog.dimensions.width * 100);
-    const sideId = pickSideForDimension(widthCm);
-    const side = placeSideOnAnchor(seat, 'back', sideId);
-    if (side) newSides.push(side);
-  }
-
-  // 2. ARMRESTS — place sides on the two outermost free left/right edges
-  //    Side width must match the seat's DEPTH for flush armrests.
+  // Place armrest sides on the two outermost free left/right edges
   const freeEdges: { module: PlacedModule; anchorId: string; worldX: number }[] = [];
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
