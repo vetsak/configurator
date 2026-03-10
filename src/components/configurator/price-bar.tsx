@@ -27,8 +27,8 @@ export function PriceBar() {
   }, [addToCart, total, modules.length, selectedMaterial, showNotification]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 lg:hidden">
-      <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px]">
+    <div className="fixed inset-x-0 bottom-0 z-20 lg:relative lg:inset-auto lg:z-auto">
+      <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px] lg:max-w-none lg:rounded-none lg:bg-white lg:shadow-[0px_-1px_12px_0px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-between px-[18px] py-[9px]">
           <div className="flex w-[160px] flex-col items-start pb-[3px]">
             <p className="text-[10px] text-black">
