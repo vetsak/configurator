@@ -28,31 +28,37 @@ export function PriceBar() {
   }, [addToCart, total, modules.length, selectedMaterial, showNotification]);
 
   return (
-    <div className={`fixed inset-x-0 bottom-0 z-20 lg:relative lg:inset-auto lg:z-auto transition-transform duration-300 ${inlinePriceVisible ? 'translate-y-full lg:translate-y-full' : 'translate-y-0'}`}>
-      <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px] lg:max-w-none lg:rounded-none lg:bg-white lg:shadow-[0px_-1px_12px_0px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-between px-[18px] py-[9px]">
-          <div className="flex w-[160px] flex-col items-start pb-[3px]">
-            <p className="text-[10px] text-black">
-              <span className="font-bold line-through">{fmt(original)}&euro;</span>
-              <span> | you save </span>
-              <span className="font-bold text-[#ce0000]">{fmt(savings)}&euro;</span>
-            </p>
-            <p className="text-[21px] font-bold text-[#ce0000]">
-              {fmt(total)}&euro;
-            </p>
-            <p className="text-[10px] text-black">
-              Lowest price in the last 30 days
-            </p>
-          </div>
+    <div
+      className={`fixed inset-x-0 bottom-0 z-20 lg:relative lg:inset-auto lg:z-auto grid transition-[grid-template-rows] duration-300 ${
+        inlinePriceVisible ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+      }`}
+    >
+      <div className="overflow-hidden">
+        <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px] lg:max-w-none lg:rounded-none lg:bg-white lg:shadow-[0px_-1px_12px_0px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-between px-[18px] py-[9px]">
+            <div className="flex w-[160px] flex-col items-start pb-[3px]">
+              <p className="text-[10px] text-black">
+                <span className="font-bold line-through">{fmt(original)}&euro;</span>
+                <span> | you save </span>
+                <span className="font-bold text-[#ce0000]">{fmt(savings)}&euro;</span>
+              </p>
+              <p className="text-[21px] font-bold text-[#ce0000]">
+                {fmt(total)}&euro;
+              </p>
+              <p className="text-[10px] text-black">
+                Lowest price in the last 30 days
+              </p>
+            </div>
 
-          <button
-            onClick={handleAddToCart}
-            className="flex min-w-[186px] max-w-[186px] items-center justify-center rounded-[60px] bg-black px-[15px] py-[10px]"
-          >
-            <span className="text-[15px] text-white tracking-[0.105px]">
-              Add to cart
-            </span>
-          </button>
+            <button
+              onClick={handleAddToCart}
+              className="flex min-w-[186px] max-w-[186px] items-center justify-center rounded-[60px] bg-black px-[15px] py-[10px]"
+            >
+              <span className="text-[15px] text-white tracking-[0.105px]">
+                Add to cart
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
