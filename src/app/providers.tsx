@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useStore } from '@/stores';
-import { applyPreset } from '@/lib/snapping/layout-solver';
+import { applyPreset, autoPlaceSides } from '@/lib/snapping/layout-solver';
 import { preloadCordNormalMap } from '@/lib/three/material-factory';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     preloadCordNormalMap().then(() => {
       if (modules.length === 0) {
         const placed = applyPreset('single');
-        setModules(placed);
+        setModules(autoPlaceSides(placed));
         setPresetId('single');
       }
     });

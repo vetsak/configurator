@@ -1,7 +1,7 @@
 'use client';
 
 import { useStore } from '@/stores';
-import { applyPreset } from '@/lib/snapping/layout-solver';
+import { applyPreset, autoPlaceSides } from '@/lib/snapping/layout-solver';
 import { PRESETS } from '@/lib/config/presets';
 
 interface PresetModalProps {
@@ -71,7 +71,7 @@ export function PresetModal({ open, onClose }: PresetModalProps) {
 
   const handleSelect = (presetId: string) => {
     const placed = applyPreset(presetId);
-    setModules(placed);
+    setModules(autoPlaceSides(placed));
     setPresetId(presetId);
     onClose();
   };
