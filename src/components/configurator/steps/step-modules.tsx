@@ -5,6 +5,7 @@ import { MODULE_IMAGES, MODULE_DISPLAY_NAMES } from '@/lib/config/dummy-data';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { PlusIcon } from '@/components/icons';
 import { predictBestPlacement } from '@/lib/snapping/seat-predictor';
+import { autoPlaceSides } from '@/lib/snapping/layout-solver';
 
 const MODULES = [
   'seat-xl', 'seat-l', 'seat-m', 'seat-s', 'seat-xs',
@@ -28,11 +29,14 @@ export function StepModules() {
 
     // For seat modules, try smart prediction first
     if (catalog.type === 'seat') {
-      const { modules, addModule, placeSnappedModule } = useStore.getState();
+      const { modules, placeSnappedModule, setModules } = useStore.getState();
       if (modules.length > 0) {
         const prediction = predictBestPlacement(moduleId, modules);
         if (prediction) {
           placeSnappedModule(moduleId, prediction);
+          // Re-place sides on exposed edges after adding the seat
+          const updated = useStore.getState().modules;
+          setModules(autoPlaceSides(updated));
           showNotification('Seat placed automatically', 'info');
           return;
         }

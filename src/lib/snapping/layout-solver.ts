@@ -347,6 +347,85 @@ function placeSidesOnExposedEdges(
 }
 
 /**
+ * Pick side module ID matching the seat depth at the given edge.
+ * Side width should match seat depth for a flush look.
+ *   63cm → side-s (63cm), 84cm → side-m (84cm), 105cm → side-l (105cm)
+ */
+function pickSideForSeat(seatModuleId: string): string {
+  const catalog = MODULE_CATALOG[seatModuleId];
+  if (!catalog) return 'side-m';
+  const depthCm = Math.round(catalog.dimensions.depth * 100);
+  if (depthCm <= 63) return 'side-s';
+  if (depthCm <= 84) return 'side-m';
+  return 'side-l';
+}
+
+/**
+ * Auto-place side modules on the two outermost exposed left/right edges.
+ * Strips existing sides, deep-clones seat modules, then places fresh sides.
+ * Returns the full module array (seats + new sides).
+ */
+export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
+  // Deep-clone seats only (strip old sides), freeing anchors that were connected to sides
+  const seats: PlacedModule[] = [];
+  const sideInstanceIds = new Set(
+    modules.filter((m) => MODULE_CATALOG[m.moduleId]?.type === 'side').map((m) => m.instanceId)
+  );
+
+  for (const mod of modules) {
+    const catalog = MODULE_CATALOG[mod.moduleId];
+    if (!catalog || catalog.type === 'side') continue;
+
+    const cloned: PlacedModule = {
+      ...mod,
+      anchors: mod.anchors.map((a) => ({ ...a })),
+      connectedTo: [...mod.connectedTo],
+    };
+
+    // Free anchors that were connected to sides
+    for (const anchor of cloned.anchors) {
+      if (!anchor.occupied) continue;
+      const conn = cloned.connectedTo.find((c) => c.anchorId === anchor.id);
+      if (conn && sideInstanceIds.has(conn.targetInstanceId)) {
+        anchor.occupied = false;
+      }
+    }
+    // Remove connection entries to sides
+    cloned.connectedTo = cloned.connectedTo.filter(
+      (c) => !sideInstanceIds.has(c.targetInstanceId)
+    );
+
+    seats.push(cloned);
+  }
+
+  if (seats.length === 0) return seats;
+
+  // Find the outermost seat at each exposed edge to pick side size
+  const freeEdges: { module: PlacedModule; anchorId: string; worldX: number }[] = [];
+  for (const seat of seats) {
+    for (const anchor of seat.anchors) {
+      if (anchor.occupied) continue;
+      if (anchor.id !== 'left' && anchor.id !== 'right') continue;
+      const cosR = Math.cos(seat.rotation[1]);
+      const sinR = Math.sin(seat.rotation[1]);
+      const wx = seat.position[0] + anchor.position[0] * cosR + anchor.position[2] * sinR;
+      freeEdges.push({ module: seat, anchorId: anchor.id, worldX: wx });
+    }
+  }
+
+  if (freeEdges.length === 0) return seats;
+  freeEdges.sort((a, b) => a.worldX - b.worldX);
+
+  const sideIds = [
+    pickSideForSeat(freeEdges[0].module.moduleId),
+    pickSideForSeat(freeEdges[freeEdges.length - 1].module.moduleId),
+  ];
+
+  const newSides = placeSidesOnExposedEdges(seats, sideIds);
+  return [...seats, ...newSides];
+}
+
+/**
  * Apply a preset by name — resolves it to placed modules.
  */
 export function applyPreset(presetId: string): PlacedModule[] {
