@@ -3,6 +3,7 @@
 import { Canvas } from '@react-three/fiber';
 import { CAMERA_DEFAULTS, SCENE_DEFAULTS } from '@/lib/config/constants';
 import { SofaScene } from './sofa-scene';
+import { ResizeInvalidator } from './resize-invalidator';
 import { useStore } from '@/stores';
 
 export function CanvasWrapper() {
@@ -30,6 +31,7 @@ export function CanvasWrapper() {
       }}
     >
       <SofaScene />
+      <ResizeInvalidator />
     </Canvas>
   );
 }

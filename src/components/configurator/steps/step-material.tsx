@@ -32,15 +32,15 @@ export function StepMaterial() {
   };
 
   return (
-    <section className="bg-white px-[18px] py-[21px]">
+    <section className="bg-white px-[18px] py-[21px] lg:px-[28px] lg:py-[28px]">
       <div className="mb-[21px]">
-        <p className="text-[18px] text-black w-[384px]">
+        <p className="text-[18px] lg:text-[20px] text-black w-[384px] lg:w-auto">
           Choose your Material and Colour:
         </p>
       </div>
 
       {/* Tag pills */}
-      <div className="flex flex-wrap content-center gap-[9px_7px] mb-[21px] w-[360px]">
+      <div className="flex flex-wrap content-center gap-[9px_7px] mb-[21px] w-[360px] lg:w-auto">
         {FABRIC_TAGS.map((tag) => (
           <button
             key={tag.id}

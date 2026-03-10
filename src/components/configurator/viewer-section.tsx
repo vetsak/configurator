@@ -12,8 +12,8 @@ const CanvasWrapper = dynamic(
 
 export function ViewerSection() {
   return (
-    <div className="sticky top-0 z-10 h-[307px] w-full">
-      <div className="relative h-full w-full rounded-[12px] bg-[#fcfcf7] overflow-hidden">
+    <div className="sticky top-0 z-10 h-[307px] w-full lg:h-full lg:static">
+      <div className="relative h-full w-full rounded-[12px] bg-[#fcfcf7] overflow-hidden lg:rounded-none">
         {/* Live 3D Canvas */}
         <CanvasWrapper />
 

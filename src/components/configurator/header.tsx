@@ -41,9 +41,9 @@ function HamburgerIcon() {
 
 export function Header() {
   return (
-    <header className="flex h-[52px] w-full items-center justify-between bg-white px-[18px]">
+    <header className="flex h-[52px] w-full items-center justify-between bg-white px-[18px] lg:h-[60px] lg:px-[32px]">
       {/* vetsak logo */}
-      <VetsakLogo className="h-[16px] w-auto text-black" />
+      <VetsakLogo className="h-[16px] w-auto text-black lg:h-[20px]" />
 
       {/* Right icons */}
       <div className="flex items-center gap-[16px]">

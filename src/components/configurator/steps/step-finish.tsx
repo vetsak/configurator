@@ -8,8 +8,8 @@ export function StepFinish() {
   const [selectedSet, setSelectedSet] = useState('pillow-set-1');
 
   return (
-    <section className="bg-white px-[18px] py-[21px]">
-      <p className="text-[18px] text-black mb-[21px]">
+    <section className="bg-white px-[18px] py-[21px] lg:px-[28px] lg:py-[28px]">
+      <p className="text-[18px] lg:text-[20px] text-black mb-[21px]">
         Finish your sofa look
       </p>
 
@@ -35,7 +35,7 @@ export function StepFinish() {
                   />
                 </div>
                 {/* Name + description */}
-                <div className="flex flex-col items-start w-[217px]">
+                <div className="flex flex-col items-start w-[217px] lg:flex-1">
                   <span className="text-[15px] text-black">{set.name}</span>
                   {set.description && (
                     <span className="text-[11px] text-black/50">{set.description}</span>
@@ -58,7 +58,7 @@ export function StepFinish() {
       </div>
 
       {/* Accessories heading */}
-      <p className="text-[18px] text-black mb-[21px]">
+      <p className="text-[18px] lg:text-[20px] text-black mb-[21px]">
         I want to choose my own Accessories
       </p>
 

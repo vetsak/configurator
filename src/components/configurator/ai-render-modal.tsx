@@ -246,9 +246,9 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
         onClick={status === 'generating' ? undefined : handleClose}
       />
 
-      {/* Bottom sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px]">
-        <div className="rounded-t-[16px] bg-white px-[18px] pb-[36px] pt-[21px] shadow-[0px_-4px_24px_0px_rgba(0,0,0,0.15)]">
+      {/* Bottom sheet (mobile) / centered dialog (desktop) */}
+      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:max-w-[520px] lg:w-full">
+        <div className="rounded-t-[16px] bg-white px-[18px] pb-[36px] pt-[21px] shadow-[0px_-4px_24px_0px_rgba(0,0,0,0.15)] lg:rounded-[16px]">
           {/* Close button */}
           {status !== 'generating' && (
             <div className="flex justify-end mb-[6px]">

@@ -27,7 +27,7 @@ export function PriceBar() {
   }, [addToCart, total, modules.length, selectedMaterial, showNotification]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20">
+    <div className="fixed inset-x-0 bottom-0 z-20 lg:hidden">
       <div className="mx-auto w-full max-w-[430px] rounded-tl-[12px] rounded-tr-[12px] bg-white/90 shadow-[0px_0px_24px_0px_rgba(0,0,0,0.25)] backdrop-blur-[2px]">
         <div className="flex items-center justify-between px-[18px] py-[9px]">
           <div className="flex w-[160px] flex-col items-start pb-[3px]">

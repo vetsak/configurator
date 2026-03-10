@@ -7,7 +7,7 @@ export function ViewerToolbar() {
   const toggleDimensions = useStore((s) => s.toggleDimensions);
 
   return (
-    <div className="absolute left-[4.2%] top-[3.6%] z-20 flex gap-[6px]">
+    <div className="absolute left-[4.2%] top-[3.6%] z-20 flex gap-[6px] lg:flex-col lg:top-1/2 lg:-translate-y-1/2 lg:left-[16px]">
       {/* Show dimensions toggle */}
       <button
         onClick={toggleDimensions}

@@ -143,7 +143,7 @@ export function StepSize() {
 
   // Clamp pill so it doesn't overflow container edges
   const pillHalfW = 46;
-  const containerW = 384;
+  const containerW = trackRef.current?.getBoundingClientRect().width ?? 384;
   const rawLeft = (pct / 100) * containerW;
   const clampedLeft = Math.max(pillHalfW, Math.min(rawLeft, containerW - pillHalfW));
   const clampedPct = (clampedLeft / containerW) * 100;
@@ -254,9 +254,9 @@ export function StepSize() {
   }, [modules, setModules, showNotification]);
 
   return (
-    <section className="bg-white px-[18px] py-[21px]">
+    <section className="bg-white px-[18px] py-[21px] lg:px-[28px] lg:py-[28px]">
       <div className="flex items-center gap-[6px] mb-[21px]">
-        <p className="text-[18px] text-black whitespace-nowrap">Adapt your Sofa size</p>
+        <p className="text-[18px] lg:text-[20px] text-black whitespace-nowrap">Adapt your Sofa size</p>
         <InfoIcon className="h-[20px] w-[20px] shrink-0" />
       </div>
 
