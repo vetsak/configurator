@@ -141,17 +141,18 @@ export default {
           content?: {
             parts?: Array<{
               text?: string;
-              inline_data?: { mime_type: string; data: string };
+              // Gemini returns camelCase in responses
+              inlineData?: { mimeType: string; data: string };
             }>;
           };
         }>;
       };
 
-      // Find the image part in the response
+      // Find the image part in the response (Gemini uses camelCase: inlineData)
       const parts = result.candidates?.[0]?.content?.parts ?? [];
-      const imagePart = parts.find((p) => p.inline_data?.data);
+      const imagePart = parts.find((p) => p.inlineData?.data);
 
-      if (!imagePart?.inline_data) {
+      if (!imagePart?.inlineData) {
         console.error('No image in Gemini response:', JSON.stringify(result).slice(0, 500));
         return new Response(
           JSON.stringify({ error: 'No image returned from AI. Please try again.' }),
@@ -160,7 +161,7 @@ export default {
       }
 
       return new Response(
-        JSON.stringify({ image: imagePart.inline_data.data }),
+        JSON.stringify({ image: imagePart.inlineData.data }),
         {
           status: 200,
           headers: { ...headers, 'Content-Type': 'application/json' },
