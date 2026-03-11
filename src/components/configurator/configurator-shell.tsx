@@ -15,6 +15,7 @@ import { SummarySection } from './summary-section';
 import { InlinePriceSection } from './inline-price-section';
 import { NotificationBar } from './notification-bar';
 import { CtaSection } from './cta-section';
+import { Footer } from './footer';
 
 export function ConfiguratorShell() {
   return (
@@ -47,6 +48,7 @@ export function ConfiguratorShell() {
                 <InlinePriceSection />
 
                 <CtaSection />
+                <Footer />
               </div>
             </div>
           </div>

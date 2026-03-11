@@ -128,12 +128,17 @@ export function StepMaterial() {
       </button>
 
       {/* Get samples link */}
-      <div className="flex items-center gap-[3px]">
+      <a
+        href="https://vetsak.com/products/fabric-samples"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-[3px]"
+      >
         <ColorSwatchIcon className="h-[18px] w-[18px]" />
         <span className="text-[12px] text-black underline">
           Get your samples here
         </span>
-      </div>
+      </a>
 
       {/* Material detail modal */}
       <MaterialModal
