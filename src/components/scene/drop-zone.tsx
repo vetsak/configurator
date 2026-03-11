@@ -6,8 +6,6 @@ import * as THREE from 'three';
 import { useStore } from '@/stores';
 import { findBestSnap } from '@/lib/snapping/snap-detector-2d';
 import { createPlacedModule } from '@/lib/snapping/engine';
-import { autoPlaceSides } from '@/lib/snapping/layout-solver';
-import { MODULE_CATALOG } from '@/lib/config/modules';
 
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const intersectPoint = new THREE.Vector3();
@@ -91,23 +89,12 @@ export function DropZone() {
 
       if (dragSource === 'catalog') {
         placeSnappedModule(dragModuleId, snapTarget);
-        // Auto-place sides after adding a seat via drag (if enabled)
-        const catalog = MODULE_CATALOG[dragModuleId];
-        if (catalog?.type === 'seat' && useStore.getState().autoSides) {
-          const { modules: updated, setModules } = useStore.getState();
-          setModules(autoPlaceSides(updated));
-        }
         // Find the just-placed module for animation
         const latestModules = useStore.getState().modules;
         const newest = latestModules[latestModules.length - 1];
         if (newest) useStore.setState({ justPlacedId: newest.instanceId });
       } else if (dragSource === 'reposition' && dragInstanceId) {
         repositionModule(dragInstanceId, snapTarget);
-        // Re-run autoPlaceSides after reposition (if enabled)
-        if (useStore.getState().autoSides) {
-          const { modules: updated, setModules } = useStore.getState();
-          setModules(autoPlaceSides(updated));
-        }
         useStore.setState({ justPlacedId: dragInstanceId });
       }
 

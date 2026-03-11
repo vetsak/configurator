@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from 'react';
 import { useStore } from '@/stores';
-import { autoPlaceSides } from '@/lib/snapping/layout-solver';
 
 /**
  * Floating action bar shown when a module is selected.
@@ -33,11 +32,6 @@ export function ModuleActions() {
     } else {
       if (seatSideCount <= 1) return;
       removeModule(selectedModule.instanceId);
-      // Re-run autoPlaceSides to keep backs + armrests consistent (if enabled)
-      if (useStore.getState().autoSides) {
-        const { modules: updated, setModules } = useStore.getState();
-        setModules(autoPlaceSides(updated));
-      }
     }
     setSelectedModuleId(null);
   }, [selectedModule, isAccessory, seatSideCount, removeModule, setSelectedModuleId]);

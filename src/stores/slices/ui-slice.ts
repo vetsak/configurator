@@ -13,15 +13,12 @@ export interface UiSlice {
   notification: Notification | null;
   showDimensions: boolean;
   inlinePriceVisible: boolean;
-  /** When true, sides/armrests are auto-placed on exposed edges after every seat change */
-  autoSides: boolean;
   setCurrentStep: (step: ConfigStep) => void;
   setLoading: (loading: boolean) => void;
   showNotification: (message: string, type?: 'info' | 'success') => void;
   clearNotification: () => void;
   toggleDimensions: () => void;
   setInlinePriceVisible: (visible: boolean) => void;
-  toggleAutoSides: () => void;
 }
 
 export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
@@ -30,7 +27,6 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   notification: null,
   showDimensions: false,
   inlinePriceVisible: false,
-  autoSides: true,
 
   setCurrentStep: (step) => set({ currentStep: step }),
   setLoading: (loading) => set({ isLoading: loading }),
@@ -38,5 +34,4 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   clearNotification: () => set({ notification: null }),
   toggleDimensions: () => set((s) => ({ showDimensions: !s.showDimensions })),
   setInlinePriceVisible: (visible) => set({ inlinePriceVisible: visible }),
-  toggleAutoSides: () => set((s) => ({ autoSides: !s.autoSides })),
 });

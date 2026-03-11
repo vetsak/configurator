@@ -160,7 +160,7 @@ export function StepSize() {
     if (shape === 'linear') {
       const seatIds = buildSeatsForWidth(snapped, currentDepth);
       const placed = buildLinear(seatIds);
-      setModules(useStore.getState().autoSides ? autoPlaceSides(placed) : placed);
+      setModules(autoPlaceSides(placed));
     } else {
       // Shape-preserving resize: only change main row, keep wings
       const parts = getShapeParts(modules);
@@ -168,7 +168,7 @@ export function StepSize() {
       const leftWingIds = parts.leftWing.map((m) => m.moduleId);
       const rightWingIds = parts.rightWing.map((m) => m.moduleId);
       const placed = buildShape(shape, mainRowSeatIds, leftWingIds, rightWingIds, []);
-      setModules(useStore.getState().autoSides ? autoPlaceSides(placed) : placed);
+      setModules(autoPlaceSides(placed));
     }
   }, [modules, currentDepth, widthSteps, setModules]);
 
@@ -232,14 +232,14 @@ export function StepSize() {
         seatIds.push(mapSeatId(mod.moduleId));
       }
       const placed = buildLinear(seatIds);
-      setModules(useStore.getState().autoSides ? autoPlaceSides(placed) : placed);
+      setModules(autoPlaceSides(placed));
     } else {
       const parts = getShapeParts(modules);
       const mainRowIds = parts.mainRow.map((m) => mapSeatId(m.moduleId));
       const leftWingIds = parts.leftWing.map((m) => mapSeatId(m.moduleId));
       const rightWingIds = parts.rightWing.map((m) => mapSeatId(m.moduleId));
       const placed = buildShape(shape, mainRowIds, leftWingIds, rightWingIds, []);
-      setModules(useStore.getState().autoSides ? autoPlaceSides(placed) : placed);
+      setModules(autoPlaceSides(placed));
     }
 
     if (substituted) {

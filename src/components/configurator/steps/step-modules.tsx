@@ -5,7 +5,6 @@ import { MODULE_DISPLAY_NAMES } from '@/lib/config/dummy-data';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { PlusIcon } from '@/components/icons';
 import { predictBestPlacement } from '@/lib/snapping/seat-predictor';
-import { autoPlaceSides } from '@/lib/snapping/layout-solver';
 import { useSelectedColour } from '@/hooks/use-selected-colour';
 
 const MODULES = [
@@ -13,32 +12,6 @@ const MODULES = [
   'side-l', 'side-m', 'side-s',
 ];
 
-function AutoSidesToggle() {
-  const autoSides = useStore((s) => s.autoSides);
-  const toggleAutoSides = useStore((s) => s.toggleAutoSides);
-
-  return (
-    <label className="flex items-center gap-[8px] mb-[14px] cursor-pointer select-none">
-      <button
-        role="switch"
-        aria-checked={autoSides}
-        onClick={toggleAutoSides}
-        className={`relative inline-flex h-[20px] w-[36px] shrink-0 items-center rounded-full transition-colors ${
-          autoSides ? 'bg-black' : 'bg-black/20'
-        }`}
-      >
-        <span
-          className={`inline-block h-[16px] w-[16px] rounded-full bg-white shadow transition-transform ${
-            autoSides ? 'translate-x-[18px]' : 'translate-x-[2px]'
-          }`}
-        />
-      </button>
-      <span className="text-[12px] text-black/60">
-        Auto-place sides
-      </span>
-    </label>
-  );
-}
 
 export function StepModules() {
   const dragModuleId = useStore((s) => s.dragModuleId);
@@ -58,16 +31,11 @@ export function StepModules() {
 
     // For seat modules, try smart prediction first
     if (catalog.type === 'seat') {
-      const { modules, placeSnappedModule, setModules } = useStore.getState();
+      const { modules, placeSnappedModule } = useStore.getState();
       if (modules.length > 0) {
         const prediction = predictBestPlacement(moduleId, modules);
         if (prediction) {
           placeSnappedModule(moduleId, prediction);
-          // Re-place sides on exposed edges after adding the seat (if enabled)
-          if (useStore.getState().autoSides) {
-            const updated = useStore.getState().modules;
-            setModules(autoPlaceSides(updated));
-          }
           showNotification('Seat placed automatically', 'info');
           return;
         }
@@ -92,9 +60,6 @@ export function StepModules() {
           Click on the sofa in the viewer above to place the module
         </p>
       )}
-
-      {/* Auto-sides toggle */}
-      <AutoSidesToggle />
 
       <div className="flex flex-wrap content-center gap-[9px]">
         {MODULES.map((id) => {
