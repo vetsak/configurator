@@ -31,6 +31,8 @@ export interface DragSlice {
   snapTarget: SnapTarget | null;
   /** Whether the ghost is in a valid snap position */
   isSnapped: boolean;
+  /** Instance ID of the most recently placed module (for animation) */
+  justPlacedId: string | null;
 
   startCatalogDrag: (moduleId: string) => void;
   startRepositionDrag: (instanceId: string) => void;
@@ -49,6 +51,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
   ghostRotation: [0, 0, 0],
   snapTarget: null,
   isSnapped: false,
+  justPlacedId: null,
 
   startCatalogDrag: (moduleId) =>
     set({

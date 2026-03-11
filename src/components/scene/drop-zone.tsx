@@ -97,11 +97,16 @@ export function DropZone() {
           const { modules: updated, setModules } = useStore.getState();
           setModules(autoPlaceSides(updated));
         }
+        // Find the just-placed module for animation
+        const latestModules = useStore.getState().modules;
+        const newest = latestModules[latestModules.length - 1];
+        if (newest) useStore.setState({ justPlacedId: newest.instanceId });
       } else if (dragSource === 'reposition' && dragInstanceId) {
         repositionModule(dragInstanceId, snapTarget);
         // Re-run autoPlaceSides after reposition to keep sides consistent
         const { modules: updated, setModules } = useStore.getState();
         setModules(autoPlaceSides(updated));
+        useStore.setState({ justPlacedId: dragInstanceId });
       }
 
       confirmDrop();

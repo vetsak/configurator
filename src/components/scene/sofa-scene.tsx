@@ -6,6 +6,7 @@ import { Ground } from './ground';
 import { CameraRig } from './camera-rig';
 import { SofaAssembly } from './sofa-assembly';
 import { GhostModule } from './ghost-module';
+import { AnchorIndicators } from './anchor-indicators';
 import { DropZone } from './drop-zone';
 
 function LoadingFallback() {
@@ -26,6 +27,7 @@ export function SofaScene() {
       <Suspense fallback={<LoadingFallback />}>
         <SofaAssembly />
         <GhostModule />
+        <AnchorIndicators />
       </Suspense>
       <DropZone />
     </>

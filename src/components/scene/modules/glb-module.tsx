@@ -2,8 +2,9 @@
 
 import { useRef, useMemo, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useStore } from '@/stores';
 import type { PlacedModule } from '@/types/configurator';
 import type { MaterialSelection } from '@/types/materials';
 import { getMaterialForSlot } from '@/lib/three/material-factory';
@@ -28,10 +29,15 @@ interface GlbModuleProps {
  * When selected, applies a subtle emissive glow to all meshes so the
  * entire module is highlighted without an obtrusive wireframe overlay.
  */
+const PLACE_ANIM_DURATION = 300; // ms
+
 export function GlbModule({ module, material, modelPath, isSelected, onSelect }: GlbModuleProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(modelPath);
   const invalidate = useThree((s) => s.invalidate);
+  const justPlacedId = useStore((s) => s.justPlacedId);
+  const scaleRef = useRef(1);
+  const animStartRef = useRef(0);
 
   // Module's Y rotation — used to counter-rotate normal/diffuse maps on Cord
   const moduleRotY = module.rotation[1];
@@ -107,6 +113,29 @@ export function GlbModule({ module, material, modelPath, isSelected, onSelect }:
 
     invalidate();
   }, [clonedScene, isSelected, invalidate]);
+
+  // Placement pop-in animation
+  useEffect(() => {
+    if (justPlacedId === module.instanceId) {
+      scaleRef.current = 0.95;
+      animStartRef.current = performance.now();
+      invalidate();
+      // Clear justPlacedId after animation
+      const timer = setTimeout(() => {
+        useStore.setState({ justPlacedId: null });
+      }, PLACE_ANIM_DURATION);
+      return () => clearTimeout(timer);
+    }
+  }, [justPlacedId, module.instanceId, invalidate]);
+
+  useFrame(() => {
+    if (!groupRef.current || scaleRef.current >= 0.999) return;
+    scaleRef.current += (1 - scaleRef.current) * 0.12;
+    if (scaleRef.current > 0.999) scaleRef.current = 1;
+    const s = scaleRef.current;
+    groupRef.current.scale.set(s, s, s);
+    invalidate();
+  });
 
   // Request a re-render when the cloned scene changes
   useEffect(() => {
