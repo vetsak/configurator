@@ -19,6 +19,8 @@ export interface WorldAnchor {
   instanceId: string;
   anchorId: string;
   moduleType: ModuleType;
+  moduleId: string;
+  rotationY: number;
   worldPos: [number, number, number];
   worldDir: [number, number, number];
   compatible: ModuleType[];
@@ -58,6 +60,8 @@ export function buildFreeAnchors(
         instanceId: mod.instanceId,
         anchorId: anchor.id,
         moduleType: catalog.type,
+        moduleId: mod.moduleId,
+        rotationY: rotY,
         worldPos: transformAnchorToWorld(anchor.position, mod.position, rotY),
         worldDir: transformDirectionToWorld(anchor.direction, rotY),
         compatible: anchor.compatible,
@@ -108,10 +112,31 @@ export function findBestSnap(
 
       if (dragType === 'side') {
         // Side modules use the special side-placement logic
+        const hostCatalog = MODULE_CATALOG[hostAnchor.moduleId];
+
+        // Check if the host seat has a back module — armrest aligns with backrest
+        let backDepth = 0;
+        if (hostAnchor.anchorId === 'left' || hostAnchor.anchorId === 'right') {
+          const hostMod = modules.find((m) => m.instanceId === hostAnchor.instanceId);
+          if (hostMod) {
+            const backConn = hostMod.connectedTo.find((c) => c.anchorId === 'back');
+            if (backConn) {
+              const backMod = modules.find((m) => m.instanceId === backConn.targetInstanceId);
+              if (backMod) {
+                const backCatalog = MODULE_CATALOG[backMod.moduleId];
+                if (backCatalog) backDepth = backCatalog.dimensions.depth;
+              }
+            }
+          }
+        }
+
         const sideResult = computeSideSnap(
           hostAnchor.worldPos,
           hostAnchor.worldDir,
-          dragCatalog
+          dragCatalog,
+          hostCatalog?.dimensions.depth,
+          hostAnchor.rotationY,
+          backDepth
         );
         snapPos = sideResult.position;
         snapRot = sideResult.rotation;

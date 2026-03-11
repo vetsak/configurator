@@ -299,7 +299,8 @@ function placeSidesOnExposedEdges(
           0,
           -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
         ];
-        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+        const hostCatalog = MODULE_CATALOG[leftEdge.module.moduleId];
+        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog, hostCatalog?.dimensions.depth, leftEdge.module.rotation[1]);
         const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
         connectModules(leftEdge.module, leftEdge.anchorId, sideMod, 'inner');
         sides.push(sideMod);
@@ -327,7 +328,8 @@ function placeSidesOnExposedEdges(
           0,
           -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
         ];
-        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+        const hostCatalog = MODULE_CATALOG[rightEdge.module.moduleId];
+        const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog, hostCatalog?.dimensions.depth, rightEdge.module.rotation[1]);
         const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
         connectModules(rightEdge.module, rightEdge.anchorId, sideMod, 'inner');
         sides.push(sideMod);
@@ -350,11 +352,13 @@ function pickSideForDimension(cm: number): string {
 
 /**
  * Place a single side module on a seat's anchor. Returns the placed side.
+ * @param backDepth  Depth of backrest behind this seat (meters), for armrest back-alignment.
  */
 function placeSideOnAnchor(
   seat: PlacedModule,
   anchorId: string,
-  sideId: string
+  sideId: string,
+  backDepth: number = 0
 ): PlacedModule | null {
   const sideCatalog = MODULE_CATALOG[sideId];
   const anchor = seat.anchors.find((a) => a.id === anchorId);
@@ -373,7 +377,15 @@ function placeSideOnAnchor(
     -anchor.direction[0] * sinR + anchor.direction[2] * cosR,
   ];
 
-  const snap = computeSideSnap(anchorWorldPos, anchorWorldDir, sideCatalog);
+  const seatCatalog = MODULE_CATALOG[seat.moduleId];
+  const snap = computeSideSnap(
+    anchorWorldPos,
+    anchorWorldDir,
+    sideCatalog,
+    seatCatalog?.dimensions.depth,
+    seat.rotation[1],
+    backDepth
+  );
   const sideMod = createPlacedModule(sideId, snap.position, snap.rotation);
   connectModules(seat, anchorId, sideMod, 'inner');
   return sideMod;
@@ -458,25 +470,29 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
   if (freeEdges.length > 0) {
     freeEdges.sort((a, b) => a.worldX - b.worldX);
 
-    // Helper: place armrest and shift it backward to align with back sides
     const placeArmrest = (edge: typeof freeEdges[0]) => {
       const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
       if (!seatCatalog) return;
       const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
       const sideId = pickSideForDimension(depthCm);
-      const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId);
+
+      // Check if this seat has a back placed — armrest should align with backrest outer edge
+      const backAnchor = edge.module.anchors.find((a) => a.id === 'back');
+      let backDepth = 0;
+      if (backAnchor?.occupied) {
+        // Find the back side module to get its depth
+        const backConn = edge.module.connectedTo.find((c) => c.anchorId === 'back');
+        if (backConn) {
+          const backSide = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
+          if (backSide) {
+            const backCatalog = MODULE_CATALOG[backSide.moduleId];
+            if (backCatalog) backDepth = backCatalog.dimensions.depth;
+          }
+        }
+      }
+
+      const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId, backDepth);
       if (!side) return;
-
-      // Nudge armrest toward the back side (back = -Z in local space)
-      const BACK_OFFSET = 0.01; // 1cm
-      const cosR = Math.cos(edge.module.rotation[1]);
-      const sinR = Math.sin(edge.module.rotation[1]);
-      // Rotate local [0,0,-1] to world space
-      const worldBackX = -sinR;
-      const worldBackZ = -cosR;
-      side.position[0] += worldBackX * BACK_OFFSET;
-      side.position[2] += worldBackZ * BACK_OFFSET;
-
       newSides.push(side);
     };
 
