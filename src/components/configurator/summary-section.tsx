@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '@/stores';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { TruckIcon } from '@/components/icons';
+import { SummaryModal } from './summary-modal';
 
 /** Exact module dimensions in cm (from vetsak spec sheet). */
 const MODULE_SPECS: Record<string, { height: number; length: number; width: number }> = {
@@ -18,6 +19,7 @@ const MODULE_SPECS: Record<string, { height: number; length: number; width: numb
 };
 
 export function SummarySection() {
+  const [modalOpen, setModalOpen] = useState(false);
   const modules = useStore((s) => s.modules);
 
   const { lengthCm, widthCm, heightCm, seatCount, sideCount, accessoryCount } = useMemo(() => {
@@ -85,7 +87,9 @@ export function SummarySection() {
             {seatCount} seat{seatCount !== 1 ? 's' : ''}, {sideCount} side{sideCount !== 1 ? 's' : ''}
             {accessoryCount > 0 && `, ${accessoryCount} accessor${accessoryCount !== 1 ? 'ies' : 'y'}`}
           </p>
-          <p className="font-bold underline">more details</p>
+          <button onClick={() => setModalOpen(true)} className="font-bold underline">
+            more details
+          </button>
         </div>
 
         {/* Shipping info bar */}
@@ -96,6 +100,8 @@ export function SummarySection() {
           </p>
         </div>
       </div>
+
+      <SummaryModal open={modalOpen} onOpenChange={setModalOpen} />
     </section>
   );
 }
