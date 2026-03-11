@@ -24,12 +24,12 @@ export function ConfiguratorShell() {
       {/* Main content: single-column mobile, two-column desktop */}
       <div className="relative flex flex-1 flex-col lg:flex-row lg:min-h-0">
         {/* 3D Viewer — sticky on mobile, left column on desktop (fills remaining space) */}
-        <div className="sticky top-0 z-10 lg:static lg:flex-1 lg:min-w-0">
+        <div className="sticky top-0 z-20 lg:static lg:flex-1 lg:min-w-0">
           <ViewerSection />
         </div>
 
         {/* Editor panel — min 380px, max 480px on desktop */}
-        <div className="relative z-20 bg-[#e9e9e9] pb-[120px] lg:w-[420px] lg:min-w-[380px] lg:max-w-[480px] lg:shrink-0 lg:flex lg:flex-col lg:pb-0 lg:min-h-0">
+        <div className="relative z-10 bg-[#e9e9e9] pb-[120px] lg:w-[420px] lg:min-w-[380px] lg:max-w-[480px] lg:shrink-0 lg:flex lg:flex-col lg:pb-0 lg:min-h-0">
           <div className="lg:flex-1 lg:overflow-y-auto lg:min-h-0">
             <div className="mx-auto w-full max-w-[430px] shadow-[0px_0px_30px_0px_rgba(0,0,0,0.05)] lg:max-w-none lg:shadow-[-4px_0px_24px_0px_rgba(0,0,0,0.06)]">
               <div className="flex flex-col gap-px bg-[#e9e9e9]">
