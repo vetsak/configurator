@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { CAMERA_DEFAULTS } from '@/lib/config/constants';
 import { useStore } from '@/stores';
 
-const BIRD_EYE_POS = new THREE.Vector3(0, 4, 0.01); // slight Z to avoid gimbal lock
+const BIRD_EYE_POS = new THREE.Vector3(0, 6, 1.5); // high overview with slight angle
 const BIRD_EYE_TARGET = new THREE.Vector3(0, 0, 0);
 const TRANSITION_SPEED = 0.08;
 const ZOOM_LERP_SPEED = 0.1;
