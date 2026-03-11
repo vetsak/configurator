@@ -117,15 +117,11 @@ export function buildShape(
   mainRowIds: string[],
   leftWingIds: string[] = [],
   rightWingIds: string[] = [],
-  sideIds: string[] = []
+  _sideIds: string[] = []
 ): PlacedModule[] {
   if (shape === 'linear') {
-    const allIds = sideIds.length >= 2
-      ? [sideIds[0], ...mainRowIds, sideIds[1]]
-      : sideIds.length === 1
-        ? [sideIds[0], ...mainRowIds]
-        : mainRowIds;
-    return buildLinear(allIds);
+    // Only place seats — sides are handled uniformly by autoPlaceSides()
+    return buildLinear(mainRowIds);
   }
 
   const placed: PlacedModule[] = [];
@@ -159,11 +155,7 @@ export function buildShape(
   // 4. Center all seats around bounding box center
   centerModules(placed);
 
-  // 5. Place side modules on exposed edges
-  if (sideIds.length > 0 && placed.length > 0) {
-    placed.push(...placeSidesOnExposedEdges(placed, sideIds));
-  }
-
+  // Sides are NOT placed here — autoPlaceSides() handles backs + armrests uniformly
   return placed;
 }
 
@@ -466,26 +458,34 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
   if (freeEdges.length > 0) {
     freeEdges.sort((a, b) => a.worldX - b.worldX);
 
-    // Leftmost armrest
-    const leftEdge = freeEdges[0];
-    const leftCatalog = MODULE_CATALOG[leftEdge.module.moduleId];
-    if (leftCatalog) {
-      const depthCm = Math.round(leftCatalog.dimensions.depth * 100);
+    // Helper: place armrest and shift it backward to align with back sides
+    const placeArmrest = (edge: typeof freeEdges[0]) => {
+      const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
+      if (!seatCatalog) return;
+      const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
       const sideId = pickSideForDimension(depthCm);
-      const side = placeSideOnAnchor(leftEdge.module, leftEdge.anchorId, sideId);
-      if (side) newSides.push(side);
-    }
+      const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId);
+      if (!side) return;
+
+      // Nudge armrest toward the back side (back = -Z in local space)
+      const BACK_OFFSET = 0.01; // 1cm
+      const cosR = Math.cos(edge.module.rotation[1]);
+      const sinR = Math.sin(edge.module.rotation[1]);
+      // Rotate local [0,0,-1] to world space
+      const worldBackX = -sinR;
+      const worldBackZ = -cosR;
+      side.position[0] += worldBackX * BACK_OFFSET;
+      side.position[2] += worldBackZ * BACK_OFFSET;
+
+      newSides.push(side);
+    };
+
+    // Leftmost armrest
+    placeArmrest(freeEdges[0]);
 
     // Rightmost armrest
     if (freeEdges.length >= 2) {
-      const rightEdge = freeEdges[freeEdges.length - 1];
-      const rightCatalog = MODULE_CATALOG[rightEdge.module.moduleId];
-      if (rightCatalog) {
-        const depthCm = Math.round(rightCatalog.dimensions.depth * 100);
-        const sideId = pickSideForDimension(depthCm);
-        const side = placeSideOnAnchor(rightEdge.module, rightEdge.anchorId, sideId);
-        if (side) newSides.push(side);
-      }
+      placeArmrest(freeEdges[freeEdges.length - 1]);
     }
   }
 
@@ -499,17 +499,20 @@ export function applyPreset(presetId: string): PlacedModule[] {
   const preset = PRESETS[presetId];
   if (!preset) throw new Error(`Preset not found: ${presetId}`);
 
-  // Non-linear presets use buildShape
+  // Non-linear presets use buildShape (seats only — autoPlaceSides adds sides)
   if (preset.shape && preset.shape !== 'linear') {
     return buildShape(
       preset.shape,
       preset.mainRowIds ?? [],
       preset.leftWingIds ?? [],
       preset.rightWingIds ?? [],
-      preset.sideIds ?? []
+      [] // no sides — autoPlaceSides() handles them uniformly
     );
   }
 
-  const moduleIds = presetToModuleIds(preset);
-  return buildLinear(moduleIds);
+  // Linear: only seat IDs — autoPlaceSides() adds backs + armrests
+  const seatIds = preset.modules
+    .filter((m) => !m.moduleId.startsWith('side-'))
+    .flatMap((m) => Array(m.count).fill(m.moduleId));
+  return buildLinear(seatIds);
 }

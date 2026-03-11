@@ -99,6 +99,9 @@ export function DropZone() {
         }
       } else if (dragSource === 'reposition' && dragInstanceId) {
         repositionModule(dragInstanceId, snapTarget);
+        // Re-run autoPlaceSides after reposition to keep sides consistent
+        const { modules: updated, setModules } = useStore.getState();
+        setModules(autoPlaceSides(updated));
       }
 
       confirmDrop();

@@ -42,6 +42,9 @@ next-env.d.ts
 
 # raw assets (source files for pipeline)
 /raw-assets/
+/3d_files/
+/public/models/backup-originals/
+/workers/
 
 # debug/test screenshots
 *.png

@@ -1,0 +1,717 @@
+{
+  "fabrics": [
+    {
+      "id": "cord_velour",
+      "name": "Cord Velour",
+      "category": "indoor",
+      "roughness": 0.9,
+      "metalness": 0,
+      "normalScale": 1,
+      "badge": null,
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "80% Polyester, 20% Nylon Backing"
+        },
+        {
+          "label": "Waschbar",
+          "value": "30°C / 86°F"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "3"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "3.5"
+        }
+      ],
+      "colours": [
+        {
+          "id": "khaki",
+          "name": "Khaki",
+          "hex": "#8a8860",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/cord-velour-khaki-256_5ce9dd1a-0a20-49d5-b139-5e0b8a5cb920.jpg?v=1749116535",
+          "swatchLocal": "/images/swatches/cord_velour-khaki.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-cord-velour-khakicord-velour-khaki.jpg?v=1758544525",
+          "textureLocal": "/textures/shopify/cord_velour-khaki.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474248048968",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387023855944"
+        },
+        {
+          "id": "mocha",
+          "name": "Mocha",
+          "hex": "#785040",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/cord-velour-mocha-256_c569a59b-3923-4b7c-8de6-8ebe5389efd1.jpg?v=1749116925",
+          "swatchLocal": "/images/swatches/cord_velour-mocha.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-cord-velour-mochacord-velour-mocha.jpg?v=1758544523",
+          "textureLocal": "/textures/shopify/cord_velour-mocha.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474248081736",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387023888712"
+        },
+        {
+          "id": "platinum",
+          "name": "Platinum",
+          "hex": "#b8b0a8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/cord-velour-platinum-256_49bc1958-1112-4fc3-9ff9-a43c1bd8200d.jpg?v=1749116627",
+          "swatchLocal": "/images/swatches/cord_velour-platinum.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-cord-velour-platinumcord-velour-platinum.jpg?v=1758544523",
+          "textureLocal": "/textures/shopify/cord_velour-platinum.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474248245576",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387024019784"
+        },
+        {
+          "id": "sand",
+          "name": "Sand",
+          "hex": "#c4b498",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/cord-velour-sand-256_161a4dee-ccdf-4d8e-bc04-6158a7cb7d22.jpg?v=1749116165",
+          "swatchLocal": "/images/swatches/cord_velour-sand.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-cord-velour-sandcord-velour-sand.jpg?v=1758544524",
+          "textureLocal": "/textures/shopify/cord_velour-sand.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474248114504",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387023921480"
+        }
+      ]
+    },
+    {
+      "id": "doodle",
+      "name": "Doodle",
+      "category": "indoor",
+      "roughness": 0.8,
+      "metalness": 0,
+      "normalScale": 0.7,
+      "badge": null,
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "100% Polyester"
+        },
+        {
+          "label": "Waschbar",
+          "value": "30°C / 86°F"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "5"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "5"
+        }
+      ],
+      "colours": [
+        {
+          "id": "cacao",
+          "name": "Cacao",
+          "hex": "#5a3828",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/doodle-cacao-256_8cc70dc9-8257-4490-9778-57b6b5fb00bf.jpg?v=1749116863",
+          "swatchLocal": "/images/swatches/doodle-cacao.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-doodle-cacaodoodle-cacao.jpg?v=1758544756",
+          "textureLocal": "/textures/shopify/doodle-cacao.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474281013576",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387149586760"
+        },
+        {
+          "id": "creme",
+          "name": "Creme",
+          "hex": "#f0e8d8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/doodle-cream-256_1fec487e-9e91-42e6-b6f2-86e90d3d7c88.jpg?v=1749116135",
+          "swatchLocal": "/images/swatches/doodle-creme.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-doodle-beigedoodle-beige.jpg?v=1758544755",
+          "textureLocal": "/textures/shopify/doodle-creme.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474280980808",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387149553992"
+        },
+        {
+          "id": "dark_grey",
+          "name": "Dark Grey",
+          "hex": "#4a4a4a",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/doodle-dark-grey-256_be3d3422-0948-4107-8806-a9f55f3fe924.jpg?v=1749116264",
+          "swatchLocal": "/images/swatches/doodle-dark_grey.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-doodle-dark-greydoodle-dark-grey.jpg?v=1758544756",
+          "textureLocal": "/textures/shopify/doodle-dark_grey.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474281046344",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387149619528"
+        }
+      ]
+    },
+    {
+      "id": "herringbone",
+      "name": "Herringbone",
+      "category": "outdoor",
+      "roughness": 0.8,
+      "metalness": 0,
+      "normalScale": 0.85,
+      "badge": "Waterproof",
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Für den Innen- und Außenbereich"
+        },
+        {
+          "label": "Material",
+          "value": "100% Acrylic"
+        },
+        {
+          "label": "Waschbar bis",
+          "value": "30°C / 86°F"
+        },
+        {
+          "label": "Farbechtheit",
+          "value": "4 - 5"
+        },
+        {
+          "label": "Farbechtheit beim Waschen",
+          "value": "4 - 5"
+        }
+      ],
+      "colours": [
+        {
+          "id": "creme",
+          "name": "Creme",
+          "hex": "#f0e8d8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/herringbone_creme.png?v=1701815533",
+          "swatchLocal": "/images/swatches/herringbone-creme.png",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/herringbone-creme-1.webp?v=1738570281",
+          "textureLocal": "/textures/shopify/herringbone-creme.webp",
+          "shopifyProductId": "gid://shopify/Product/9608879210824",
+          "shopifyVariantId": "gid://shopify/ProductVariant/51082049716552"
+        },
+        {
+          "id": "dark_grey",
+          "name": "Dark Grey",
+          "hex": "#4a4a4a",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/herringbone_dark_grey.png?v=1701815533",
+          "swatchLocal": "/images/swatches/herringbone-dark_grey.png",
+          "textureUrl": null,
+          "textureLocal": null,
+          "shopifyProductId": "gid://shopify/Product/9918870225224",
+          "shopifyVariantId": "gid://shopify/ProductVariant/52577779974472"
+        }
+      ]
+    },
+    {
+      "id": "leather",
+      "name": "Leather",
+      "category": "indoor",
+      "roughness": 0.5,
+      "metalness": 0.05,
+      "normalScale": 0.6,
+      "badge": null,
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "100 % Europäisches Rindleder"
+        },
+        {
+          "label": "Waschbar",
+          "value": "Nur feucht abwischen"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "3"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "-"
+        }
+      ],
+      "colours": [
+        {
+          "id": "beige",
+          "name": "Beige",
+          "hex": "#d4c4a8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/leather-beige-256_57b234a7-1951-4d05-811f-699c44e65601.jpg?v=1749116451",
+          "swatchLocal": "/images/swatches/leather-beige.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-leather-beigeleather-beige.jpg?v=1758544036",
+          "textureLocal": "/textures/shopify/leather-beige.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474264072520",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387123437896"
+        },
+        {
+          "id": "cacao",
+          "name": "Cacao",
+          "hex": "#5a3828",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/leather-mocha-256_756fe3c5-bdeb-450f-b698-9be21ab8d7a8.jpg?v=1749116505",
+          "swatchLocal": "/images/swatches/leather-cacao.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-leather-cacaoleather-cacao.jpg?v=1758545255",
+          "textureLocal": "/textures/shopify/leather-cacao.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474264236360",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387123601736"
+        },
+        {
+          "id": "dark_grey",
+          "name": "Dark Grey",
+          "hex": "#4a4a4a",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/leather-dark-grey-256_4ebeb33d-7d4f-4273-a7f5-daad90d2f683.jpg?v=1749116479",
+          "swatchLocal": "/images/swatches/leather-dark_grey.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-leather-anthraciteleather-anthracite.jpg?v=1758545255",
+          "textureLocal": "/textures/shopify/leather-dark_grey.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474264170824",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387123536200"
+        },
+        {
+          "id": "olive",
+          "name": "Olive",
+          "hex": "#6b7040",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/leather-olive-256_32c65ff8-751c-47d7-960d-4f0d0897a6b0.jpg?v=1749116422",
+          "swatchLocal": "/images/swatches/leather-olive.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-leather-oliveleather-olive.jpg?v=1758545256",
+          "textureLocal": "/textures/shopify/leather-olive.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474264138056",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387123503432"
+        }
+      ]
+    },
+    {
+      "id": "loop_loop",
+      "name": "Loop Loop",
+      "category": "indoor",
+      "roughness": 0.85,
+      "metalness": 0,
+      "normalScale": 0.9,
+      "badge": null,
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "28% Polyester, 25% Acryl, 24% Wolle, 23% recycelte Baumwolle"
+        },
+        {
+          "label": "Waschbar",
+          "value": "Nur chemische Reinigung"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "4-5"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "-"
+        }
+      ],
+      "colours": [
+        {
+          "id": "anthracite",
+          "name": "Anthracite",
+          "hex": "#383838",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/loop-loop-anthracite-256_90f49355-9732-460c-a4d3-5134d2c7ad0b.jpg?v=1749116896",
+          "swatchLocal": "/images/swatches/loop_loop-anthracite.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-boucle-anthraciteboucle-anthracite.jpg?v=1758544895",
+          "textureLocal": "/textures/shopify/loop_loop-anthracite.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474259910984",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387115245896"
+        },
+        {
+          "id": "duna",
+          "name": "Duna",
+          "hex": "#c8a878",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/loop-loop-duna-256_b51b2948-30f5-46db-b012-8bcbe0d15a27.jpg?v=1749115989",
+          "swatchLocal": "/images/swatches/loop_loop-duna.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-boucle-dunaboucle-duna.jpg?v=1758544893",
+          "textureLocal": "/textures/shopify/loop_loop-duna.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474260074824",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387115606344"
+        },
+        {
+          "id": "mousse",
+          "name": "Mousse",
+          "hex": "#c8b8a0",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/loop-loop-mousse-256_11a8ccf8-9024-4ce4-aa17-c42fffa417ff.jpg?v=1749116236",
+          "swatchLocal": "/images/swatches/loop_loop-mousse.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-boucle-mousseboucle-mousse.jpg?v=1758544895",
+          "textureLocal": "/textures/shopify/loop_loop-mousse.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474259943752",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387115475272"
+        },
+        {
+          "id": "taupe",
+          "name": "Taupe",
+          "hex": "#a09080",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/loop-loop-taupe-256_eb3bd2be-336e-4ef1-a908-7ca0a6ec907b.jpg?v=1749115960",
+          "swatchLocal": "/images/swatches/loop_loop-taupe.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-boucle-taupeboucle-taupe.jpg?v=1758544895",
+          "textureLocal": "/textures/shopify/loop_loop-taupe.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474260009288",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387115540808"
+        }
+      ]
+    },
+    {
+      "id": "pique",
+      "name": "Pique",
+      "category": "outdoor",
+      "roughness": 0.75,
+      "metalness": 0,
+      "normalScale": 0.8,
+      "badge": "Waterproof",
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innen- und Außenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "100% Acrylic"
+        },
+        {
+          "label": "Waschbar",
+          "value": "30°C / 86°F"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "4 - 5"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "4 - 5"
+        }
+      ],
+      "colours": [
+        {
+          "id": "beige",
+          "name": "Beige",
+          "hex": "#d4c4a8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique-beige-256_8b93cdbd-06d9-4d1c-8c48-e59a0cbcfa58.jpg?v=1749115930",
+          "swatchLocal": "/images/swatches/pique-beige.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-pique-beigepique-beige.jpg?v=1758545074",
+          "textureLocal": "/textures/shopify/pique-beige.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474275967304",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387144048968"
+        },
+        {
+          "id": "cedar",
+          "name": "Cedar",
+          "hex": "#8b6040",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique-cedar.png?v=1768235146",
+          "swatchLocal": "/images/swatches/pique-cedar.png",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-pique-cedarpique-cedar.jpg?v=1758545075",
+          "textureLocal": "/textures/shopify/pique-cedar.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474275901768",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387143983432"
+        },
+        {
+          "id": "creme",
+          "name": "Creme",
+          "hex": "#f0e8d8",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique-creme-256_405880ee-252d-4ee2-878c-7dcedd8da0f4.jpg?v=1749116397",
+          "swatchLocal": "/images/swatches/pique-creme.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-pique-cremepique-creme.jpg?v=1758545074",
+          "textureLocal": "/textures/shopify/pique-creme.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474275934536",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387144016200"
+        },
+        {
+          "id": "dark_blue",
+          "name": "Dark Blue",
+          "hex": "#1a2848",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique_dark_blue_21dda7ba-c0e4-42fa-a83d-300d7fd0d916.png?v=1701815533",
+          "swatchLocal": "/images/swatches/pique-dark_blue.png",
+          "textureUrl": null,
+          "textureLocal": null,
+          "shopifyProductId": "gid://shopify/Product/9918870126920",
+          "shopifyVariantId": "gid://shopify/ProductVariant/52577779614024"
+        },
+        {
+          "id": "dark_grey",
+          "name": "Dark Grey",
+          "hex": "#4a4a4a",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique-dark-grey-256_c9da16d1-ebe7-4d69-b5fe-433e9fa39d91.jpg?v=1749116356",
+          "swatchLocal": "/images/swatches/pique-dark_grey.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-pique-dark-greypique-dark-grey.jpg?v=1758545074",
+          "textureLocal": "/textures/shopify/pique-dark_grey.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474275836232",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387143917896"
+        },
+        {
+          "id": "light_grey",
+          "name": "Light Grey",
+          "hex": "#c0c0c0",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique_light_grey_a4f67234-1bc9-4ca5-9ab4-a4418e2f177f.png?v=1701815533",
+          "swatchLocal": "/images/swatches/pique-light_grey.png",
+          "textureUrl": null,
+          "textureLocal": null,
+          "shopifyProductId": "gid://shopify/Product/9918870159688",
+          "shopifyVariantId": "gid://shopify/ProductVariant/52577779908936"
+        },
+        {
+          "id": "stone",
+          "name": "Stone",
+          "hex": "#a09890",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique_stone_2e605e77-73ae-4931-a3d6-3bd874cb3af6.png?v=1701815533",
+          "swatchLocal": "/images/swatches/pique-stone.png",
+          "textureUrl": null,
+          "textureLocal": null,
+          "shopifyProductId": "gid://shopify/Product/9918870192456",
+          "shopifyVariantId": "gid://shopify/ProductVariant/52577779941704"
+        },
+        {
+          "id": "taupe",
+          "name": "Taupe",
+          "hex": "#a09080",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/pique-taupe-256_1a4e6250-1e43-42d7-8a7c-f097f6741a4a.jpg?v=1749116805",
+          "swatchLocal": "/images/swatches/pique-taupe.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-pique-taupepique-taupe.jpg?v=1758545074",
+          "textureLocal": "/textures/shopify/pique-taupe.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474276098376",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387144212808"
+        }
+      ]
+    },
+    {
+      "id": "suave",
+      "name": "Suave",
+      "category": "indoor",
+      "roughness": 0.7,
+      "metalness": 0,
+      "normalScale": 0.8,
+      "badge": null,
+      "specs": [
+        {
+          "label": "Verwendung",
+          "value": "Innenbereich"
+        },
+        {
+          "label": "Zusammensetzung",
+          "value": "100% Polyester"
+        },
+        {
+          "label": "Waschbar",
+          "value": "30°C / 86°F"
+        },
+        {
+          "label": "Farbbeständigkeit",
+          "value": "4-5"
+        },
+        {
+          "label": "Waschfarbbeständigkeit",
+          "value": "4-5"
+        }
+      ],
+      "colours": [
+        {
+          "id": "anthracite",
+          "name": "Anthracite",
+          "hex": "#383838",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-antracite-256_75e1f0e5-ca78-4aa9-ad0d-a502e36d85f3.jpg?v=1749116299",
+          "swatchLocal": "/images/swatches/suave-anthracite.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-anthracitesuave-anthracite.jpg?v=1758544037",
+          "textureLocal": "/textures/shopify/suave-anthracite.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474300576072",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252117832"
+        },
+        {
+          "id": "clay",
+          "name": "Clay",
+          "hex": "#b87850",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-clay-512jpg_3f6f5d5d-fdad-43b8-9d72-6a9ee48e15e6.jpg?v=1768295337",
+          "swatchLocal": "/images/swatches/suave-clay.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-clay.jpg?v=1768295396",
+          "textureLocal": "/textures/shopify/suave-clay.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474300641608",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252183368"
+        },
+        {
+          "id": "espresso",
+          "name": "Espresso",
+          "hex": "#3a2010",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-espresso-256_daf4ba48-a3bb-412a-ace8-7a2299746b72.jpg?v=1749116037",
+          "swatchLocal": "/images/swatches/suave-espresso.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-espressosuave-espresso.jpg?v=1758544039",
+          "textureLocal": "/textures/shopify/suave-espresso.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474300739912",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252281672"
+        },
+        {
+          "id": "navy",
+          "name": "Navy",
+          "hex": "#2c3e5a",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-navy-256_12658025-3f03-406d-8502-716ee1db4a10.jpg?v=1749116713",
+          "swatchLocal": "/images/swatches/suave-navy.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-navysuave-navy.jpg?v=1758544036",
+          "textureLocal": "/textures/shopify/suave-navy.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474301002056",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252609352"
+        },
+        {
+          "id": "orange_blaze",
+          "name": "Orange Blaze",
+          "hex": "#e06020",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-orange-blaze-256_c43fdc92-32dc-40ba-982f-e0e6ea80d979.jpg?v=1749116688",
+          "swatchLocal": "/images/swatches/suave-orange_blaze.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-orange-blazesuave-orange-blaze.jpg?v=1758544040",
+          "textureLocal": "/textures/shopify/suave-orange_blaze.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474300805448",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252379976"
+        },
+        {
+          "id": "pearl",
+          "name": "Pearl",
+          "hex": "#e8dcd0",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-pearl-256_b531db43-2f6f-4165-a156-2d105ec1eb00.jpg?v=1749115890",
+          "swatchLocal": "/images/swatches/suave-pearl.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-pearlsuave-pearl.jpg?v=1758544033",
+          "textureLocal": "/textures/shopify/suave-pearl.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474301034824",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252642120"
+        },
+        {
+          "id": "pine",
+          "name": "Pine",
+          "hex": "#2a5030",
+          "swatchUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/suave-pine-256_4cb7ff05-6595-4903-8f9d-7944e63f2812.jpg?v=1749116739",
+          "swatchLocal": "/images/swatches/suave-pine.jpg",
+          "textureUrl": "https://cdn.shopify.com/s/files/1/0522/6368/2204/files/vetsak-fabric-details-suave-pinesuave-pine.jpg?v=1758544039",
+          "textureLocal": "/textures/shopify/suave-pine.jpg",
+          "shopifyProductId": "gid://shopify/Product/9474301133128",
+          "shopifyVariantId": "gid://shopify/ProductVariant/50387252740424"
+        }
+      ]
+    }
+  ],
+  "prices": [
+    {
+      "key": "cord_velour-khaki",
+      "price": 920
+    },
+    {
+      "key": "cord_velour-mocha",
+      "price": 1150
+    },
+    {
+      "key": "cord_velour-sand",
+      "price": 1150
+    },
+    {
+      "key": "cord_velour-platinum",
+      "price": 1150
+    },
+    {
+      "key": "loop_loop-anthracite",
+      "price": 1080
+    },
+    {
+      "key": "loop_loop-mousse",
+      "price": 1350
+    },
+    {
+      "key": "loop_loop-taupe",
+      "price": 1350
+    },
+    {
+      "key": "loop_loop-duna",
+      "price": 1350
+    },
+    {
+      "key": "leather-beige",
+      "price": 2250
+    },
+    {
+      "key": "leather-olive",
+      "price": 2250
+    },
+    {
+      "key": "leather-dark_grey",
+      "price": 2250
+    },
+    {
+      "key": "leather-cacao",
+      "price": 2250
+    },
+    {
+      "key": "pique-dark_grey",
+      "price": 992
+    },
+    {
+      "key": "pique-cedar",
+      "price": 992
+    },
+    {
+      "key": "pique-creme",
+      "price": 1240
+    },
+    {
+      "key": "pique-beige",
+      "price": 992
+    },
+    {
+      "key": "pique-taupe",
+      "price": 992
+    },
+    {
+      "key": "doodle-creme",
+      "price": 1200
+    },
+    {
+      "key": "doodle-cacao",
+      "price": 1200
+    },
+    {
+      "key": "doodle-dark_grey",
+      "price": 1200
+    },
+    {
+      "key": "suave-anthracite",
+      "price": 856
+    },
+    {
+      "key": "suave-clay",
+      "price": 1070
+    },
+    {
+      "key": "suave-espresso",
+      "price": 1070
+    },
+    {
+      "key": "suave-orange_blaze",
+      "price": 1070
+    },
+    {
+      "key": "suave-navy",
+      "price": 1070
+    },
+    {
+      "key": "suave-pearl",
+      "price": 856
+    },
+    {
+      "key": "suave-pine",
+      "price": 1070
+    },
+    {
+      "key": "herringbone-creme",
+      "price": 916
+    },
+    {
+      "key": "pique-dark_blue",
+      "price": 992
+    },
+    {
+      "key": "pique-light_grey",
+      "price": 992
+    },
+    {
+      "key": "pique-stone",
+      "price": 992
+    },
+    {
+      "key": "herringbone-dark_grey",
+      "price": 916
+    }
+  ]
+}

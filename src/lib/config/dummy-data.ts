@@ -103,14 +103,15 @@ export interface DummyAccessory {
   id: string;
   name: string;
   image: string;
+  /** Catalog ID for 3D placement. Undefined = no 3D model available. */
+  catalogId?: string;
 }
 
 export const DUMMY_ACCESSORIES: DummyAccessory[] = [
-  { id: 'noodle', name: 'Noodle', image: '/images/accessories/noodle.jpg' },
-  { id: 'pillow', name: 'Pillow', image: '/images/accessories/pillow.jpg' },
-  { id: 'big-pillow', name: 'Big Pillow', image: '/images/accessories/big-pillow.jpg' },
-  { id: 'jumbo-pillow', name: 'Jumbo Pillow', image: '/images/accessories/jumbo-pillow.jpg' },
-  { id: 'lounge-pillow-acc', name: 'Lounge pillow', image: '/images/accessories/lounge-pillow.jpg' },
-  { id: 'blanket', name: 'Blanket', image: '/images/accessories/blanket.jpg' },
+  { id: 'noodle', name: 'Noodle', image: '/images/accessories/noodle.jpg', catalogId: 'noodle' },
+  { id: 'pillow', name: 'Pillow', image: '/images/accessories/pillow.jpg', catalogId: 'pillow-back' },
+  { id: 'big-pillow', name: 'Big Pillow', image: '/images/accessories/big-pillow.jpg', catalogId: 'pillow-deco-l' },
+  { id: 'jumbo-pillow', name: 'Jumbo Pillow', image: '/images/accessories/jumbo-pillow.jpg', catalogId: 'jumbo-pillow-folded' },
+  { id: 'lounge-pillow-acc', name: 'Lounge pillow', image: '/images/accessories/lounge-pillow.jpg', catalogId: 'pillow-deco-s' },
   { id: 'footsak', name: 'Footsak', image: '/images/accessories/footsak.jpg' },
 ];

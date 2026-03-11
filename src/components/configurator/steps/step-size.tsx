@@ -121,6 +121,8 @@ export function StepSize() {
   const { totalWidthCm, currentDepth } = useMemo(() => {
     let width = 0;
     for (const mod of modules) {
+      // Only count structural modules (seats + sides) for sofa dimensions
+      if (mod.type !== 'seat' && mod.type !== 'side') continue;
       const catalog = MODULE_CATALOG[mod.moduleId];
       if (!catalog) continue;
       const ry = mod.rotation[1];

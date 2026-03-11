@@ -11,6 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const modules = useStore((s) => s.modules);
 
   // Preload cord normal map, then apply default preset
+  // Shopify catalog is baked in at build time — no fetch needed
   useEffect(() => {
     preloadCordNormalMap().then(() => {
       if (modules.length === 0) {

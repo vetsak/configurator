@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useStore } from '@/stores';
+import { autoPlaceSides } from '@/lib/snapping/layout-solver';
 
 /**
  * Floating action bar shown when a module is selected.
@@ -20,13 +21,24 @@ export function ModuleActions() {
     [modules, selectedModuleId]
   );
 
-  const canRemove = modules.length > 1 && selectedModule !== null;
+  const isAccessory = selectedModule?.type === 'pillow' || selectedModule?.type === 'noodle';
+  const seatSideCount = modules.filter((m) => m.type === 'seat' || m.type === 'side').length;
+  const canRemove = selectedModule !== null && (isAccessory || seatSideCount > 1);
 
   const handleRemove = useCallback(() => {
-    if (!selectedModule || modules.length <= 1) return;
-    removeModule(selectedModule.instanceId);
+    if (!selectedModule) return;
+    if (isAccessory) {
+      // Accessories don't use anchor connections — simple removal
+      useStore.getState().removeAccessory(selectedModule.instanceId);
+    } else {
+      if (seatSideCount <= 1) return;
+      removeModule(selectedModule.instanceId);
+      // Re-run autoPlaceSides to keep backs + armrests consistent
+      const { modules: updated, setModules } = useStore.getState();
+      setModules(autoPlaceSides(updated));
+    }
     setSelectedModuleId(null);
-  }, [selectedModule, modules, removeModule, setSelectedModuleId]);
+  }, [selectedModule, isAccessory, seatSideCount, removeModule, setSelectedModuleId]);
 
   const handleMove = useCallback(() => {
     if (!selectedModule) return;
@@ -44,8 +56,8 @@ export function ModuleActions() {
         {selectedModule.moduleId}
       </span>
 
-      {/* Move button */}
-      <button
+      {/* Move button — not available for accessories */}
+      {!isAccessory && <button
         onClick={handleMove}
         className="inline-flex items-center gap-1.5 rounded-full bg-blue-500 px-3 py-1.5 text-xs font-medium text-white shadow transition-colors hover:bg-blue-600 active:bg-blue-700 min-h-[36px] min-w-[36px] touch-manipulation"
         aria-label="Move selected module"
@@ -60,7 +72,7 @@ export function ModuleActions() {
           <path d="M3.28 2.22a.75.75 0 00-1.06 1.06L5.44 6.5H2.75a.75.75 0 000 1.5h4.5A.75.75 0 008 7.25v-4.5a.75.75 0 00-1.5 0v2.69L3.28 2.22zM13.5 2.75a.75.75 0 00-1.5 0v4.5c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-2.69l3.22-3.22a.75.75 0 00-1.06-1.06L13.5 5.44V2.75zM2.75 12a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 101.06 1.06L6.5 14.56v2.69a.75.75 0 001.5 0v-4.5A.75.75 0 007.25 12h-4.5zM12.75 12a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0v-2.69l3.22 3.22a.75.75 0 101.06-1.06L14.56 13.5h2.69a.75.75 0 000-1.5h-4.5z" />
         </svg>
         <span>Move</span>
-      </button>
+      </button>}
 
       {/* Remove button */}
       {canRemove && (

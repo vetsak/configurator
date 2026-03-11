@@ -1,11 +1,12 @@
 'use client';
 
 import { useStore } from '@/stores';
-import { MODULE_IMAGES, MODULE_DISPLAY_NAMES } from '@/lib/config/dummy-data';
+import { MODULE_DISPLAY_NAMES } from '@/lib/config/dummy-data';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { PlusIcon } from '@/components/icons';
 import { predictBestPlacement } from '@/lib/snapping/seat-predictor';
 import { autoPlaceSides } from '@/lib/snapping/layout-solver';
+import { useSelectedColour } from '@/hooks/use-selected-colour';
 
 const MODULES = [
   'seat-xl', 'seat-l', 'seat-m', 'seat-s', 'seat-xs',
@@ -17,6 +18,7 @@ export function StepModules() {
   const startCatalogDrag = useStore((s) => s.startCatalogDrag);
   const cancelDrag = useStore((s) => s.cancelDrag);
   const showNotification = useStore((s) => s.showNotification);
+  const { fabricId, colourId } = useSelectedColour();
 
   const handleClick = (moduleId: string) => {
     if (dragModuleId === moduleId) {
@@ -73,12 +75,16 @@ export function StepModules() {
                 isActive ? 'border-black border-2' : 'border-black/20'
               }`}
             >
-              {/* Product photo top half */}
+              {/* Product photo top half — real Shopify image per colour */}
               <div className="absolute left-[-1px] top-[-1px] h-[63px] w-[89px]">
                 <img
-                  src={MODULE_IMAGES[id]}
+                  src={`/images/modules/${id}-${fabricId}-${colourId}.jpg`}
                   alt={id}
                   className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => {
+                    // Fallback to generic module image
+                    (e.target as HTMLImageElement).src = `/images/modules/${id}.jpg`;
+                  }}
                 />
               </div>
 

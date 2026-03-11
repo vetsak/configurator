@@ -27,24 +27,35 @@ const etikettMaterial = new THREE.MeshStandardMaterial({
 // Cache for cord materials keyed by `${fabricId}-${colourId}`
 const cordMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
 
-// Shared normal map for cord fabric — preloaded once, applied to all colors
-const CORD_NORMAL_PATH = '/textures/cord/platinum/normal.webp';
-let sharedCordNormalMap: THREE.Texture | null = null;
-let normalMapLoading = false;
+// Texture caches — keyed by path, loaded once and reused
+const textureCache = new Map<string, THREE.Texture>();
+let preloadPromise: Promise<void> | null = null;
+
+/** Load a texture (cached). */
+function loadTextureCached(path: string, linear = false): Promise<THREE.Texture> {
+  const cached = textureCache.get(path);
+  if (cached) return Promise.resolve(cached);
+  return textureManager.load(path).then((tex) => {
+    if (linear) tex.colorSpace = THREE.LinearSRGBColorSpace;
+    textureCache.set(path, tex);
+    return tex;
+  });
+}
 
 /**
- * Preload the cord normal map. Call this early (e.g. in Providers)
- * so it's available synchronously when materials are first created.
+ * Preload default cord textures. Call early (e.g. in Providers)
+ * so they're available synchronously when materials are first created.
  */
 export function preloadCordNormalMap(): Promise<void> {
-  if (sharedCordNormalMap || normalMapLoading) return Promise.resolve();
-  normalMapLoading = true;
-  return textureManager.load(CORD_NORMAL_PATH).then((normalMap) => {
-    normalMap.colorSpace = THREE.LinearSRGBColorSpace;
-    sharedCordNormalMap = normalMap;
-  }).catch(() => {
-    normalMapLoading = false;
-  });
+  if (preloadPromise) return preloadPromise;
+  // Preload the default (platinum) textures
+  const defaultColour = FABRICS.cord_velour?.colours[0];
+  if (!defaultColour) return Promise.resolve();
+  preloadPromise = Promise.all([
+    loadTextureCached(defaultColour.normalMapPath, true),
+    loadTextureCached(defaultColour.texturePath),
+  ]).then(() => {}).catch(() => { preloadPromise = null; });
+  return preloadPromise;
 }
 
 export function getMaterialForSlot(
@@ -80,25 +91,28 @@ function getCordMaterial(selection: MaterialSelection): THREE.MeshStandardMateri
   });
 
   if (colour) {
-    // Load diffuse texture only for platinum (other colors don't have diffuse maps)
-    if (colour.id === 'platinum') {
-      textureManager.load(colour.texturePath).then((map) => {
+    const normalScale = fabric?.normalScale ?? 1.0;
+
+    // Diffuse map — every color has one
+    const cachedDiffuse = textureCache.get(colour.texturePath);
+    if (cachedDiffuse) {
+      material.map = cachedDiffuse;
+    } else {
+      loadTextureCached(colour.texturePath).then((map) => {
         material.map = map;
         material.needsUpdate = true;
       }).catch(() => {});
     }
 
-    // Apply shared cord normal map synchronously if preloaded
-    if (sharedCordNormalMap) {
-      material.normalMap = sharedCordNormalMap;
-      material.normalScale.set(fabric?.normalScale ?? 1.0, fabric?.normalScale ?? 1.0);
+    // Normal map — every color has one
+    const cachedNormal = textureCache.get(colour.normalMapPath);
+    if (cachedNormal) {
+      material.normalMap = cachedNormal;
+      material.normalScale.set(normalScale, normalScale);
     } else {
-      // Fallback: load async (won't affect already-cloned materials)
-      textureManager.load(CORD_NORMAL_PATH).then((normalMap) => {
-        normalMap.colorSpace = THREE.LinearSRGBColorSpace;
-        sharedCordNormalMap = normalMap;
+      loadTextureCached(colour.normalMapPath, true).then((normalMap) => {
         material.normalMap = normalMap;
-        material.normalScale.set(fabric?.normalScale ?? 1.0, fabric?.normalScale ?? 1.0);
+        material.normalScale.set(normalScale, normalScale);
         material.needsUpdate = true;
       }).catch(() => {});
     }

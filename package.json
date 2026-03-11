@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/fetch-shopify-catalog.ts",
     "build": "next build",
+    "fetch-catalog": "tsx scripts/fetch-shopify-catalog.ts",
     "start": "next start",
     "lint": "eslint"
   },

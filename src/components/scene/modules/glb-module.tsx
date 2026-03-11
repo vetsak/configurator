@@ -33,6 +33,9 @@ export function GlbModule({ module, material, modelPath, isSelected, onSelect }:
   const { scene } = useGLTF(modelPath);
   const invalidate = useThree((s) => s.invalidate);
 
+  // Module's Y rotation — used to counter-rotate normal/diffuse maps on Cord
+  const moduleRotY = module.rotation[1];
+
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
 
@@ -42,7 +45,28 @@ export function GlbModule({ module, material, modelPath, isSelected, onSelect }:
 
         // Clone the shared material so emissive changes stay local to this instance.
         if (matName === 'Cord') {
-          child.material = getMaterialForSlot(MODULE_MATERIAL_SLOTS.CORD, material).clone();
+          const clonedMat = getMaterialForSlot(MODULE_MATERIAL_SLOTS.CORD, material).clone() as THREE.MeshStandardMaterial;
+
+          // Counter-rotate texture UVs so cord pattern stays consistent
+          // regardless of module Y rotation (sides rotated ±90°)
+          if (Math.abs(moduleRotY) > 0.01) {
+            const rotateTexture = (tex: THREE.Texture): THREE.Texture => {
+              const rotated = tex.clone();
+              rotated.center.set(0.5, 0.5);
+              rotated.rotation = -moduleRotY;
+              rotated.needsUpdate = true;
+              return rotated;
+            };
+
+            if (clonedMat.normalMap) {
+              clonedMat.normalMap = rotateTexture(clonedMat.normalMap);
+            }
+            if (clonedMat.map) {
+              clonedMat.map = rotateTexture(clonedMat.map);
+            }
+          }
+
+          child.material = clonedMat;
         } else if (matName === 'legs') {
           child.material = getMaterialForSlot(MODULE_MATERIAL_SLOTS.LEGS, material).clone();
         } else if (matName === 'etikett') {
@@ -58,7 +82,7 @@ export function GlbModule({ module, material, modelPath, isSelected, onSelect }:
     });
 
     return clone;
-  }, [scene, material]);
+  }, [scene, material, moduleRotY]);
 
   // Apply / remove emissive highlight when selection state changes.
   // Because each mesh now owns a cloned material, mutations are safe.

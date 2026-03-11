@@ -186,6 +186,43 @@ export const MODULE_CATALOG: ModuleCatalog = {
     materialSlots: ['Cord'],
     basePrice: 69,
   },
+  // Jumbo Pillows
+  'jumbo-pillow-folded': {
+    id: 'jumbo-pillow-folded',
+    type: 'pillow',
+    size: 'jumbo-folded',
+    name: 'Jumbo Pillow',
+    sku: 'FETSAC-JUMBO-FOLDED',
+    dimensions: { width: 0.867, depth: 0.480, height: 0.436 },
+    modelPath: '/models/jumbo-pillow-folded.glb',
+    anchorTemplate: [],
+    materialSlots: ['Cord'],
+    basePrice: 199,
+  },
+  'jumbo-pillow-left': {
+    id: 'jumbo-pillow-left',
+    type: 'pillow',
+    size: 'jumbo-left',
+    name: 'Jumbo Pillow Left',
+    sku: 'FETSAC-JUMBO-LEFT',
+    dimensions: { width: 1.373, depth: 1.330, height: 0.379 },
+    modelPath: '/models/jumbo-pillow-left.glb',
+    anchorTemplate: [],
+    materialSlots: ['Cord'],
+    basePrice: 199,
+  },
+  'jumbo-pillow-right': {
+    id: 'jumbo-pillow-right',
+    type: 'pillow',
+    size: 'jumbo-right',
+    name: 'Jumbo Pillow Right',
+    sku: 'FETSAC-JUMBO-RIGHT',
+    dimensions: { width: 1.294, depth: 1.264, height: 0.399 },
+    modelPath: '/models/jumbo-pillow-right.glb',
+    anchorTemplate: [],
+    materialSlots: ['Cord'],
+    basePrice: 199,
+  },
 };
 
 export function getModule(moduleId: string) {

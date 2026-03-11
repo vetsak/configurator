@@ -2,7 +2,7 @@ export type ModuleType = 'seat' | 'side' | 'pillow' | 'noodle';
 
 export type SeatSize = 'xs' | 's' | 'm' | 'l' | 'xl';
 export type SideSize = 's' | 'l';
-export type PillowType = 'back' | 'deco-s' | 'deco-l' | 'noodle';
+export type PillowType = 'back' | 'deco-s' | 'deco-l' | 'jumbo-folded' | 'jumbo-left' | 'jumbo-right' | 'noodle';
 
 export interface AnchorPoint {
   id: string;

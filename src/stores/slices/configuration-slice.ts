@@ -3,6 +3,7 @@ import type { PlacedModule } from '@/types/configurator';
 import type { SnapTarget } from './drag-slice';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { createPlacedModule, connectModules } from '@/lib/snapping/engine';
+import { computeAccessoryPlacement } from '@/lib/snapping/accessory-placement';
 
 export interface ConfigurationSlice {
   modules: PlacedModule[];
@@ -19,6 +20,10 @@ export interface ConfigurationSlice {
   placeSnappedModule: (catalogId: string, snap: SnapTarget) => void;
   /** Reposition an existing module to a new snap target. */
   repositionModule: (instanceId: string, snap: SnapTarget) => void;
+  /** Place an accessory (pillow/noodle) on top of the best available seat. */
+  placeAccessory: (catalogId: string) => void;
+  /** Remove an accessory by instance ID (no anchor disconnection needed). */
+  removeAccessory: (instanceId: string) => void;
 }
 
 export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], ConfigurationSlice> = (set, get) => ({
@@ -108,4 +113,19 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
 
       return { modules };
     }),
+
+  placeAccessory: (catalogId) => {
+    const state = get();
+    const selectedModuleId = (state as unknown as { selectedModuleId: string | null }).selectedModuleId ?? null;
+    const placement = computeAccessoryPlacement(catalogId, state.modules, selectedModuleId);
+    if (!placement) return;
+
+    const accessory = createPlacedModule(catalogId, placement.position, placement.rotation);
+    set({ modules: [...state.modules, accessory] });
+  },
+
+  removeAccessory: (instanceId) =>
+    set((state) => ({
+      modules: state.modules.filter((m) => m.instanceId !== instanceId),
+    })),
 });
