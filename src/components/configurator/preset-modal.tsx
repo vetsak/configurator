@@ -74,7 +74,7 @@ export function PresetModal({ open, onClose }: PresetModalProps) {
 
   const handleSelect = (presetId: string) => {
     const placed = applyPreset(presetId);
-    setModules(autoPlaceSides(placed));
+    setModules(useStore.getState().autoSides ? autoPlaceSides(placed) : placed);
     setPresetId(presetId);
     onClose();
   };

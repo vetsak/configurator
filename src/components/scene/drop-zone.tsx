@@ -91,9 +91,9 @@ export function DropZone() {
 
       if (dragSource === 'catalog') {
         placeSnappedModule(dragModuleId, snapTarget);
-        // Auto-place sides after adding a seat via drag
+        // Auto-place sides after adding a seat via drag (if enabled)
         const catalog = MODULE_CATALOG[dragModuleId];
-        if (catalog?.type === 'seat') {
+        if (catalog?.type === 'seat' && useStore.getState().autoSides) {
           const { modules: updated, setModules } = useStore.getState();
           setModules(autoPlaceSides(updated));
         }
@@ -103,9 +103,11 @@ export function DropZone() {
         if (newest) useStore.setState({ justPlacedId: newest.instanceId });
       } else if (dragSource === 'reposition' && dragInstanceId) {
         repositionModule(dragInstanceId, snapTarget);
-        // Re-run autoPlaceSides after reposition to keep sides consistent
-        const { modules: updated, setModules } = useStore.getState();
-        setModules(autoPlaceSides(updated));
+        // Re-run autoPlaceSides after reposition (if enabled)
+        if (useStore.getState().autoSides) {
+          const { modules: updated, setModules } = useStore.getState();
+          setModules(autoPlaceSides(updated));
+        }
         useStore.setState({ justPlacedId: dragInstanceId });
       }
 
