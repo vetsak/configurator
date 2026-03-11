@@ -22,34 +22,42 @@ export function SummarySection() {
   const [modalOpen, setModalOpen] = useState(false);
   const modules = useStore((s) => s.modules);
 
-  const { lengthCm, widthCm, heightCm, seatCount, sideCount, accessoryCount } = useMemo(() => {
+  const SIZE_LABEL: Record<string, string> = {
+    xs: 'XS', s: 'S', m: 'M', l: 'L', xl: 'XL',
+  };
+
+  const { lengthCm, widthCm, heightCm, moduleSummary, accessoryCount } = useMemo(() => {
     if (modules.length === 0)
-      return { lengthCm: 0, widthCm: 0, heightCm: 0, seatCount: 0, sideCount: 0, accessoryCount: 0 };
+      return { lengthCm: 0, widthCm: 0, heightCm: 0, moduleSummary: '', accessoryCount: 0 };
 
     let minX = Infinity, maxX = -Infinity;
     let minZ = Infinity, maxZ = -Infinity;
     let maxHeight = 0;
-    let seats = 0, sides = 0, accessories = 0;
+    let accessories = 0;
+
+    // Count by moduleId
+    const counts: Record<string, number> = {};
 
     for (const mod of modules) {
       const catalog = MODULE_CATALOG[mod.moduleId];
       if (!catalog) continue;
 
-      if (catalog.type === 'seat') seats++;
-      else if (catalog.type === 'side') sides++;
-      else { accessories++; continue; } // skip accessories for dimensions
+      if (catalog.type !== 'seat' && catalog.type !== 'side') {
+        accessories++;
+        continue;
+      }
+
+      counts[mod.moduleId] = (counts[mod.moduleId] || 0) + 1;
 
       const spec = MODULE_SPECS[mod.moduleId];
       const ry = mod.rotation[1];
       const cosR = Math.abs(Math.cos(ry));
       const sinR = Math.abs(Math.sin(ry));
 
-      // Use spec dimensions if available, otherwise catalog (meters → cm)
       const lenCm = spec?.length ?? Math.round(catalog.dimensions.width * 100);
       const widCm = spec?.width ?? Math.round(catalog.dimensions.depth * 100);
       const hCm = spec?.height ?? Math.round(catalog.dimensions.height * 100);
 
-      // Rotated extents in world space
       const halfX = (lenCm * cosR + widCm * sinR) / 2;
       const halfZ = (lenCm * sinR + widCm * cosR) / 2;
       const cx = mod.position[0] * 100;
@@ -62,12 +70,21 @@ export function SummarySection() {
       maxHeight = Math.max(maxHeight, hCm);
     }
 
+    // Build summary string like "1 x Seat M, 3 x Side L"
+    const parts: string[] = [];
+    for (const [id, count] of Object.entries(counts)) {
+      const catalog = MODULE_CATALOG[id];
+      if (!catalog) continue;
+      const typeName = catalog.type === 'seat' ? 'Seat' : 'Side';
+      const sizeLabel = SIZE_LABEL[catalog.size] ?? catalog.size.toUpperCase();
+      parts.push(`${count} x ${typeName} ${sizeLabel}`);
+    }
+
     return {
       lengthCm: Math.round(maxX - minX),
       widthCm: Math.round(maxZ - minZ),
       heightCm: maxHeight,
-      seatCount: seats,
-      sideCount: sides,
+      moduleSummary: parts.join(', '),
       accessoryCount: accessories,
     };
   }, [modules]);
@@ -84,7 +101,7 @@ export function SummarySection() {
         <div className="text-[15px] text-black leading-normal">
           <p>{lengthCm}cm x {widthCm}cm x {heightCm}cm</p>
           <p className="text-[12px] text-black/50">
-            {seatCount} seat{seatCount !== 1 ? 's' : ''}, {sideCount} side{sideCount !== 1 ? 's' : ''}
+            {moduleSummary}
             {accessoryCount > 0 && `, ${accessoryCount} accessor${accessoryCount !== 1 ? 'ies' : 'y'}`}
           </p>
           <button onClick={() => setModalOpen(true)} className="font-bold underline">
