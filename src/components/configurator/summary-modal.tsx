@@ -26,340 +26,227 @@ const SIZE_LABEL: Record<string, string> = {
   xs: 'XS', s: 'S', m: 'M', l: 'L', xl: 'XL',
 };
 
-/* ── Isometric renderer ──────────────────────────────────── */
+/* ── Isometric SVG Renderer ──────────────────────────────── */
 
-const COS30 = Math.cos(Math.PI / 6);
+const COS30 = Math.cos(Math.PI / 6); // 0.866
 const SIN30 = 0.5;
+const ISO_SCALE = 1.8; // px per cm
+const FILL = '#B8AB8A';
+const STROKE = '#1F1F1F';
+const SW = 1.5;
 
-function isoProject(x: number, y: number, z: number): [number, number] {
+/** Convert 3D (x, y, z) to 2D isometric screen coords */
+function iso(x: number, y: number, z: number): [number, number] {
   return [
     (x - z) * COS30,
     (x + z) * SIN30 - y,
   ];
 }
 
-interface IsoBox {
-  x: number; z: number; // center position (cm)
-  w: number; d: number; h: number; // dimensions (cm)
+/** Build an isometric box path (top, right face, left face) for a module */
+function isoBoxPaths(
+  ox: number, oz: number,
+  w: number, d: number, h: number,
+): { top: string; right: string; left: string } {
+  // 8 corners of the box
+  const tfl = iso(ox, h, oz);
+  const tfr = iso(ox + w, h, oz);
+  const tbl = iso(ox, h, oz + d);
+  const tbr = iso(ox + w, h, oz + d);
+  const bfl = iso(ox, 0, oz);
+  const bfr = iso(ox + w, 0, oz);
+  const bbl = iso(ox, 0, oz + d);
+  // const bbr = iso(ox + w, 0, oz + d); // hidden
+
+  const top = `M${tfl[0]},${tfl[1]} L${tfr[0]},${tfr[1]} L${tbr[0]},${tbr[1]} L${tbl[0]},${tbl[1]} Z`;
+  const right = `M${tfr[0]},${tfr[1]} L${bfr[0]},${bfr[1]} L${bbl[0]},${bbl[1]} L${tbr[0]},${tbr[1]} Z`;
+  const left = `M${tfl[0]},${tfl[1]} L${bfl[0]},${bfl[1]} L${bbl[0]},${bbl[1]} L${tbl[0]},${tbl[1]} Z`;
+
+  return { top, right, left };
+}
+
+/** Cushion crease line on top face (horizontal division) */
+function topCreasePath(ox: number, oz: number, w: number, d: number, h: number, ratio: number): string {
+  const p1 = iso(ox, h, oz + d * ratio);
+  const p2 = iso(ox + w, h, oz + d * ratio);
+  return `M${p1[0]},${p1[1]} L${p2[0]},${p2[1]}`;
+}
+
+/** Vertical crease on right face */
+function rightCreasePath(ox: number, oz: number, w: number, d: number, h: number, ratio: number): string {
+  const p1 = iso(ox + w, h, oz + d * ratio);
+  const p2 = iso(ox + w, 0, oz + d * ratio);
+  return `M${p1[0]},${p1[1]} L${p2[0]},${p2[1]}`;
+}
+
+interface IsoModule {
+  ox: number; oz: number;
+  w: number; d: number; h: number;
   type: 'seat' | 'side';
+  label: string;
 }
 
-const COLORS = {
-  seat: { top: '#d4c5a9', left: '#c1b294', right: '#ae9f80', stroke: '#9a8d72' },
-  side: { top: '#c8b99a', left: '#b5a688', right: '#a29377', stroke: '#8e8068' },
-};
-
-function renderIsoBox(box: IsoBox, scale: number) {
-  const { x, z, w, d, h, type } = box;
-  const hw = (w / 2) * scale;
-  const hd = (d / 2) * scale;
-  const sh = h * scale;
-  const c = COLORS[type];
-
-  // 8 corners
-  const tfl = isoProject(x * scale - hw, sh, z * scale - hd);
-  const tfr = isoProject(x * scale + hw, sh, z * scale - hd);
-  const tbl = isoProject(x * scale - hw, sh, z * scale + hd);
-  const tbr = isoProject(x * scale + hw, sh, z * scale + hd);
-  const bfl = isoProject(x * scale - hw, 0, z * scale - hd);
-  const bfr = isoProject(x * scale + hw, 0, z * scale - hd);
-  const bbl = isoProject(x * scale - hw, 0, z * scale + hd);
-
-  const topPath = `M${tfl[0]},${tfl[1]} L${tfr[0]},${tfr[1]} L${tbr[0]},${tbr[1]} L${tbl[0]},${tbl[1]} Z`;
-  const leftPath = `M${tfl[0]},${tfl[1]} L${tbl[0]},${tbl[1]} L${bbl[0]},${bbl[1]} L${bfl[0]},${bfl[1]} Z`;
-  const rightPath = `M${tfl[0]},${tfl[1]} L${tfr[0]},${tfr[1]} L${bfr[0]},${bfr[1]} L${bfl[0]},${bfl[1]} Z`;
-
-  return (
-    <>
-      <path d={leftPath} fill={c.left} stroke={c.stroke} strokeWidth={0.8} />
-      <path d={rightPath} fill={c.right} stroke={c.stroke} strokeWidth={0.8} />
-      <path d={topPath} fill={c.top} stroke={c.stroke} strokeWidth={0.8} />
-    </>
-  );
-}
-
-interface Variation {
-  name: string;
-  boxes: IsoBox[];
+function IsometricSofa({ modules: isoModules, totalW, totalD }: {
+  modules: IsoModule[];
   totalW: number;
   totalD: number;
-}
+}) {
+  if (isoModules.length === 0) return null;
 
-function generateVariations(
-  seatCount: number,
-  seatId: string,
-  sideId: string,
-): Variation[] {
-  const ss = MODULE_SPECS[seatId] ?? { height: 37, length: 84, width: 84 };
-  const sd = MODULE_SPECS[sideId] ?? { height: 60, length: 84, width: 31 };
-  const seatW = ss.length; // x-extent
-  const seatD = ss.width;  // z-extent
-  const sideW = sd.length;
-  const sideD = sd.width;
-  const seatH = ss.height;
-  const sideH = sd.height;
-
-  const variations: Variation[] = [];
-
-  // Helper: build a linear arrangement
-  const buildLinear = (n: number): IsoBox[] => {
-    const boxes: IsoBox[] = [];
-    const totalSeatsW = n * seatW;
-    const startX = -totalSeatsW / 2 + seatW / 2;
-    for (let i = 0; i < n; i++) {
-      boxes.push({ x: startX + i * seatW, z: 0, w: seatW, d: seatD, h: seatH, type: 'seat' });
-    }
-    // Side left
-    boxes.push({ x: startX - seatW / 2 - sideD / 2, z: 0, w: sideW, d: sideD, h: sideH, type: 'side' });
-    // Side right
-    boxes.push({ x: startX + (n - 1) * seatW + seatW / 2 + sideD / 2, z: 0, w: sideW, d: sideD, h: sideH, type: 'side' });
-    return boxes;
-  };
-
-  // Helper: build L-shape (right)
-  const buildLRight = (mainCount: number, wingCount: number): IsoBox[] => {
-    const boxes: IsoBox[] = [];
-    const totalMainW = mainCount * seatW;
-    const startX = -totalMainW / 2 + seatW / 2;
-    // Main row
-    for (let i = 0; i < mainCount; i++) {
-      boxes.push({ x: startX + i * seatW, z: 0, w: seatW, d: seatD, h: seatH, type: 'seat' });
-    }
-    // Right wing (going forward, +Z)
-    const wingX = startX + (mainCount - 1) * seatW;
-    for (let i = 0; i < wingCount; i++) {
-      boxes.push({ x: wingX, z: seatD / 2 + seatW / 2 + i * seatW, w: seatD, d: seatW, h: seatH, type: 'seat' });
-    }
-    // Sides: left of main, back of wing
-    boxes.push({ x: startX - seatW / 2 - sideD / 2, z: 0, w: sideW, d: sideD, h: sideH, type: 'side' });
-    const lastWingZ = seatD / 2 + seatW / 2 + (wingCount - 1) * seatW;
-    boxes.push({ x: wingX, z: lastWingZ + seatW / 2 + sideD / 2, w: sideW, d: sideD, h: sideH, type: 'side' });
-    return boxes;
-  };
-
-  // Helper: build L-shape (left)
-  const buildLLeft = (mainCount: number, wingCount: number): IsoBox[] => {
-    const boxes: IsoBox[] = [];
-    const totalMainW = mainCount * seatW;
-    const startX = -totalMainW / 2 + seatW / 2;
-    // Main row
-    for (let i = 0; i < mainCount; i++) {
-      boxes.push({ x: startX + i * seatW, z: 0, w: seatW, d: seatD, h: seatH, type: 'seat' });
-    }
-    // Left wing (going forward, +Z)
-    for (let i = 0; i < wingCount; i++) {
-      boxes.push({ x: startX, z: seatD / 2 + seatW / 2 + i * seatW, w: seatD, d: seatW, h: seatH, type: 'seat' });
-    }
-    // Sides: right of main, back of wing
-    boxes.push({ x: startX + (mainCount - 1) * seatW + seatW / 2 + sideD / 2, z: 0, w: sideW, d: sideD, h: sideH, type: 'side' });
-    const lastWingZ = seatD / 2 + seatW / 2 + (wingCount - 1) * seatW;
-    boxes.push({ x: startX, z: lastWingZ + seatW / 2 + sideD / 2, w: sideW, d: sideD, h: sideH, type: 'side' });
-    return boxes;
-  };
-
-  // Helper: compute total W & D
-  const computeDims = (boxes: IsoBox[]) => {
-    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-    for (const b of boxes) {
-      minX = Math.min(minX, b.x - b.w / 2);
-      maxX = Math.max(maxX, b.x + b.w / 2);
-      minZ = Math.min(minZ, b.z - b.d / 2);
-      maxZ = Math.max(maxZ, b.z + b.d / 2);
-    }
-    return { totalW: Math.round(maxX - minX), totalD: Math.round(maxZ - minZ) };
-  };
-
-  if (seatCount >= 1) {
-    const linear = buildLinear(seatCount);
-    const d = computeDims(linear);
-    variations.push({ name: `${seatCount}-Seat Linear`, boxes: linear, ...d });
-  }
-
-  if (seatCount >= 3) {
-    const lr = buildLRight(seatCount - 1, 1);
-    const d = computeDims(lr);
-    variations.push({ name: 'L-Shape Right', boxes: lr, ...d });
-  }
-
-  if (seatCount >= 3) {
-    const ll = buildLLeft(seatCount - 1, 1);
-    const d = computeDims(ll);
-    variations.push({ name: 'L-Shape Left', boxes: ll, ...d });
-  }
-
-  if (seatCount >= 5) {
-    // U-shape: main row (n-2), 1 left wing, 1 right wing
-    const mainN = seatCount - 2;
-    const uBoxes: IsoBox[] = [];
-    const totalMainW = mainN * seatW;
-    const startX = -totalMainW / 2 + seatW / 2;
-    for (let i = 0; i < mainN; i++) {
-      uBoxes.push({ x: startX + i * seatW, z: 0, w: seatW, d: seatD, h: seatH, type: 'seat' });
-    }
-    // Left wing
-    uBoxes.push({ x: startX, z: seatD / 2 + seatW / 2, w: seatD, d: seatW, h: seatH, type: 'seat' });
-    // Right wing
-    uBoxes.push({ x: startX + (mainN - 1) * seatW, z: seatD / 2 + seatW / 2, w: seatD, d: seatW, h: seatH, type: 'seat' });
-    // Sides at end of wings
-    const wingZ = seatD / 2 + seatW / 2;
-    uBoxes.push({ x: startX, z: wingZ + seatW / 2 + sideD / 2, w: sideW, d: sideD, h: sideH, type: 'side' });
-    uBoxes.push({ x: startX + (mainN - 1) * seatW, z: wingZ + seatW / 2 + sideD / 2, w: sideW, d: sideD, h: sideH, type: 'side' });
-    const d = computeDims(uBoxes);
-    variations.push({ name: 'U-Shape', boxes: uBoxes, ...d });
-  }
-
-  return variations;
-}
-
-function IsometricVariation({ variation }: { variation: Variation }) {
-  const { boxes, totalW, totalD } = variation;
-
-  // Get bounding box of all boxes in cm
-  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  let maxH = 0;
-  for (const b of boxes) {
-    minX = Math.min(minX, b.x - b.w / 2);
-    maxX = Math.max(maxX, b.x + b.w / 2);
-    minZ = Math.min(minZ, b.z - b.d / 2);
-    maxZ = Math.max(maxZ, b.z + b.d / 2);
-    maxH = Math.max(maxH, b.h);
-  }
-  const cmW = maxX - minX;
-  const cmD = maxZ - minZ;
-
-  // Scale to fit in ~220px wide isometric view
-  const targetPx = 180;
-  const isoExtentW = (cmW + cmD) * COS30;
-  const scale = targetPx / (isoExtentW || 1);
-
-  // Center the boxes
-  const centerX = (minX + maxX) / 2;
-  const centerZ = (minZ + maxZ) / 2;
-  const centered = boxes.map(b => ({ ...b, x: b.x - centerX, z: b.z - centerZ }));
-
-  // Project bounding corners to get SVG bounds
-  const projections: [number, number][] = [];
-  for (const b of centered) {
+  // Compute all iso points to find bounding box
+  const allPts: [number, number][] = [];
+  for (const m of isoModules) {
+    const s = ISO_SCALE;
     const corners = [
-      [b.x - b.w / 2, 0, b.z - b.d / 2],
-      [b.x + b.w / 2, 0, b.z - b.d / 2],
-      [b.x - b.w / 2, 0, b.z + b.d / 2],
-      [b.x + b.w / 2, 0, b.z + b.d / 2],
-      [b.x - b.w / 2, b.h, b.z - b.d / 2],
-      [b.x + b.w / 2, b.h, b.z - b.d / 2],
-      [b.x - b.w / 2, b.h, b.z + b.d / 2],
-      [b.x + b.w / 2, b.h, b.z + b.d / 2],
+      iso(m.ox * s, m.h * s, m.oz * s),
+      iso((m.ox + m.w) * s, m.h * s, m.oz * s),
+      iso(m.ox * s, m.h * s, (m.oz + m.d) * s),
+      iso((m.ox + m.w) * s, m.h * s, (m.oz + m.d) * s),
+      iso(m.ox * s, 0, m.oz * s),
+      iso((m.ox + m.w) * s, 0, m.oz * s),
+      iso(m.ox * s, 0, (m.oz + m.d) * s),
+      iso((m.ox + m.w) * s, 0, (m.oz + m.d) * s),
     ];
-    for (const c of corners) {
-      projections.push(isoProject(c[0] * scale, c[1] * scale, c[2] * scale));
-    }
+    allPts.push(...corners);
   }
 
-  let svgMinX = Infinity, svgMaxX = -Infinity, svgMinY = Infinity, svgMaxY = -Infinity;
-  for (const [px, py] of projections) {
-    svgMinX = Math.min(svgMinX, px);
-    svgMaxX = Math.max(svgMaxX, px);
-    svgMinY = Math.min(svgMinY, py);
-    svgMaxY = Math.max(svgMaxY, py);
-  }
+  const xs = allPts.map(p => p[0]);
+  const ys = allPts.map(p => p[1]);
+  const minPx = Math.min(...xs);
+  const maxPx = Math.max(...xs);
+  const minPy = Math.min(...ys);
+  const maxPy = Math.max(...ys);
 
-  const pad = 40;
-  const svgW = svgMaxX - svgMinX + pad * 2;
-  const svgH = svgMaxY - svgMinY + pad * 2;
-  const offsetX = -svgMinX + pad;
-  const offsetY = -svgMinY + pad;
+  const pad = 50;
+  const svgW = maxPx - minPx + pad * 2;
+  const svgH = maxPy - minPy + pad * 2;
+  const offsetX = -minPx + pad;
+  const offsetY = -minPy + pad;
 
-  // Sort boxes: back-to-front for painter's algorithm (higher z + higher x drawn last)
-  const sorted = [...centered].sort((a, b) => (a.z + a.x) - (b.z + b.x));
+  // Dimension label positions
+  const widthLabelAngle = -30;
+  const depthLabelAngle = 30;
 
-  // Dimension lines positions
-  // Width line: across the top-front
-  const wLeft = isoProject((-cmW / 2) * scale, 0, (-cmD / 2) * scale);
-  const wRight = isoProject((cmW / 2) * scale, 0, (-cmD / 2) * scale);
-  const wMid = [(wLeft[0] + wRight[0]) / 2, (wLeft[1] + wRight[1]) / 2];
-  // Depth line: along the left side
-  const dFront = isoProject((-cmW / 2) * scale, 0, (-cmD / 2) * scale);
-  const dBack = isoProject((-cmW / 2) * scale, 0, (cmD / 2) * scale);
-  const dMid = [(dFront[0] + dBack[0]) / 2, (dFront[1] + dBack[1]) / 2];
-
-  const lineOff = 14;
+  // Front-left corner (for width dimension line)
+  const frontLeftBottom = iso(isoModules[0].ox * ISO_SCALE, 0, isoModules[0].oz * ISO_SCALE);
+  // We'll place dimension labels at corners
+  const widthStart = iso(
+    Math.min(...isoModules.map(m => m.ox)) * ISO_SCALE,
+    0,
+    Math.max(...isoModules.map(m => m.oz + m.d)) * ISO_SCALE
+  );
+  const widthEnd = iso(
+    Math.max(...isoModules.map(m => m.ox + m.w)) * ISO_SCALE,
+    0,
+    Math.max(...isoModules.map(m => m.oz + m.d)) * ISO_SCALE
+  );
+  const depthStart = iso(
+    Math.max(...isoModules.map(m => m.ox + m.w)) * ISO_SCALE,
+    0,
+    Math.min(...isoModules.map(m => m.oz)) * ISO_SCALE
+  );
+  const depthEnd = iso(
+    Math.max(...isoModules.map(m => m.ox + m.w)) * ISO_SCALE,
+    0,
+    Math.max(...isoModules.map(m => m.oz + m.d)) * ISO_SCALE
+  );
 
   return (
-    <div className="flex flex-col items-center">
-      <svg
-        width={svgW}
-        height={svgH + 10}
-        viewBox={`0 0 ${svgW} ${svgH + 10}`}
-        className="max-w-full"
-      >
-        <g transform={`translate(${offsetX}, ${offsetY + 5})`}>
-          {/* Depth dimension (left side) */}
-          <g>
-            <line
-              x1={dFront[0] - lineOff} y1={dFront[1]}
-              x2={dBack[0] - lineOff} y2={dBack[1]}
-              stroke="#333" strokeWidth={0.8}
-            />
-            <line
-              x1={dFront[0] - lineOff - 4} y1={dFront[1]}
-              x2={dFront[0] - lineOff + 4} y2={dFront[1]}
-              stroke="#333" strokeWidth={0.8}
-            />
-            <line
-              x1={dBack[0] - lineOff - 4} y1={dBack[1]}
-              x2={dBack[0] - lineOff + 4} y2={dBack[1]}
-              stroke="#333" strokeWidth={0.8}
-            />
-            <text
-              x={dMid[0] - lineOff - 4}
-              y={dMid[1] - 6}
-              textAnchor="middle"
-              fill="#333"
-              fontSize={11}
-              fontStyle="italic"
-              fontFamily="inherit"
-            >
-              {totalD}
-            </text>
-          </g>
+    <svg
+      width="100%"
+      viewBox={`0 0 ${Math.round(svgW)} ${Math.round(svgH)}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform={`translate(${offsetX}, ${offsetY})`}>
+        {/* Render modules back-to-front (sort by oz desc then ox asc for proper overlap) */}
+        {[...isoModules]
+          .sort((a, b) => (a.oz + a.oz) - (b.oz + b.oz) || a.ox - b.ox)
+          .map((m, i) => {
+            const s = ISO_SCALE;
+            const paths = isoBoxPaths(m.ox * s, m.oz * s, m.w * s, m.d * s, m.h * s);
 
-          {/* Width dimension (bottom-right) */}
-          <g>
-            <line
-              x1={wLeft[0]} y1={wLeft[1] + lineOff}
-              x2={wRight[0]} y2={wRight[1] + lineOff}
-              stroke="#333" strokeWidth={0.8}
-            />
-            <line
-              x1={wLeft[0]} y1={wLeft[1] + lineOff - 4}
-              x2={wLeft[0]} y2={wLeft[1] + lineOff + 4}
-              stroke="#333" strokeWidth={0.8}
-            />
-            <line
-              x1={wRight[0]} y1={wRight[1] + lineOff - 4}
-              x2={wRight[0]} y2={wRight[1] + lineOff + 4}
-              stroke="#333" strokeWidth={0.8}
-            />
+            const isSide = m.type === 'side';
+            const seatH = m.h * s;
+
+            return (
+              <g key={i}>
+                {/* Left face (darker shade) */}
+                <path d={paths.left} fill={FILL} stroke={STROKE} strokeWidth={SW} strokeMiterlimit={10} opacity={0.85} />
+                {/* Right face */}
+                <path d={paths.right} fill={FILL} stroke={STROKE} strokeWidth={SW} strokeMiterlimit={10} opacity={0.9} />
+                {/* Top face */}
+                <path d={paths.top} fill={FILL} stroke={STROKE} strokeWidth={SW} strokeMiterlimit={10} />
+
+                {/* Cushion crease lines for seats */}
+                {!isSide && (
+                  <>
+                    <path d={topCreasePath(m.ox * s, m.oz * s, m.w * s, m.d * s, seatH, 0.5)} stroke={STROKE} strokeWidth={0.8} opacity={0.4} />
+                    <path d={rightCreasePath(m.ox * s, m.oz * s, m.w * s, m.d * s, seatH, 0.5)} stroke={STROKE} strokeWidth={0.8} opacity={0.3} />
+                  </>
+                )}
+
+                {/* Side armrest has a curved top hint */}
+                {isSide && (() => {
+                  const cx = (m.ox + m.w / 2) * s;
+                  const cz = (m.oz + m.d * 0.35) * s;
+                  const topPt = iso(cx, m.h * s * 0.85, cz);
+                  const leftPt = iso(m.ox * s, m.h * s * 0.6, cz);
+                  const rightPt = iso((m.ox + m.w) * s, m.h * s * 0.6, cz);
+                  return (
+                    <path
+                      d={`M${leftPt[0]},${leftPt[1]} Q${topPt[0]},${topPt[1]} ${rightPt[0]},${rightPt[1]}`}
+                      stroke={STROKE} strokeWidth={0.8} fill="none" opacity={0.35}
+                    />
+                  );
+                })()}
+              </g>
+            );
+          })}
+
+        {/* Width dimension line (bottom-front edge) */}
+        <g opacity={0.7}>
+          <line
+            x1={widthStart[0]} y1={widthStart[1] + 15}
+            x2={widthEnd[0]} y2={widthEnd[1] + 15}
+            stroke="#333" strokeWidth={1.5}
+          />
+          <line x1={widthStart[0]} y1={widthStart[1] + 10} x2={widthStart[0]} y2={widthStart[1] + 20} stroke="#333" strokeWidth={1.5} />
+          <line x1={widthEnd[0]} y1={widthEnd[1] + 10} x2={widthEnd[0]} y2={widthEnd[1] + 20} stroke="#333" strokeWidth={1.5} />
+          <g transform={`translate(${(widthStart[0] + widthEnd[0]) / 2}, ${(widthStart[1] + widthEnd[1]) / 2 + 15})`}>
+            <rect x={-24} y={-9} width={48} height={18} rx={9} fill="#FAFAF1" stroke="none" />
             <text
-              x={wMid[0]}
-              y={wMid[1] + lineOff + 16}
-              textAnchor="middle"
-              fill="#333"
-              fontSize={11}
-              fontStyle="italic"
-              fontFamily="inherit"
+              textAnchor="middle" dominantBaseline="central"
+              fill="#1F1F1F" fontSize={11} fontWeight={600}
+              transform={`rotate(${widthLabelAngle})`}
             >
               {totalW}
             </text>
           </g>
-
-          {/* Isometric boxes */}
-          {sorted.map((box, i) => (
-            <g key={i}>{renderIsoBox(box, scale)}</g>
-          ))}
         </g>
-      </svg>
-    </div>
+
+        {/* Depth dimension line (right edge) */}
+        <g opacity={0.7}>
+          <line
+            x1={depthStart[0] + 15} y1={depthStart[1]}
+            x2={depthEnd[0] + 15} y2={depthEnd[1]}
+            stroke="#333" strokeWidth={1.5}
+          />
+          <line x1={depthStart[0] + 10} y1={depthStart[1]} x2={depthStart[0] + 20} y2={depthStart[1]} stroke="#333" strokeWidth={1.5} />
+          <line x1={depthEnd[0] + 10} y1={depthEnd[1]} x2={depthEnd[0] + 20} y2={depthEnd[1]} stroke="#333" strokeWidth={1.5} />
+          <g transform={`translate(${(depthStart[0] + depthEnd[0]) / 2 + 15}, ${(depthStart[1] + depthEnd[1]) / 2})`}>
+            <rect x={-24} y={-9} width={48} height={18} rx={9} fill="#FAFAF1" stroke="none" />
+            <text
+              textAnchor="middle" dominantBaseline="central"
+              fill="#1F1F1F" fontSize={11} fontWeight={600}
+              transform={`rotate(${depthLabelAngle})`}
+            >
+              {totalD}
+            </text>
+          </g>
+        </g>
+      </g>
+    </svg>
   );
 }
 
@@ -440,11 +327,10 @@ interface SchematicData {
   totalH: number;
   counts: Array<{ count: number; name: string; dimLabel: string }>;
   rects: Array<{ cx: number; cz: number; halfW: number; halfD: number; label: string }>;
+  isoModules: IsoModule[];
   minX: number; minZ: number;
   sofaW: number; sofaD: number;
   seatCount: number;
-  primarySeatId: string;
-  primarySideId: string;
 }
 
 /* ── Main modal ──────────────────────────────────────────── */
@@ -466,10 +352,8 @@ export function SummaryModal({ open, onOpenChange }: SummaryModalProps) {
 
     const counts: Record<string, { count: number; name: string; dimLabel: string }> = {};
     const rects: SchematicData['rects'] = [];
+    const isoModules: IsoModule[] = [];
 
-    // Track most common seat/side for variation generation
-    const seatCounts: Record<string, number> = {};
-    const sideCounts: Record<string, number> = {};
     let totalSeats = 0;
 
     for (const mod of modules) {
@@ -505,21 +389,30 @@ export function SummaryModal({ open, onOpenChange }: SummaryModalProps) {
       }
       counts[key].count++;
 
-      if (catalog.type === 'seat') {
-        seatCounts[mod.moduleId] = (seatCounts[mod.moduleId] || 0) + 1;
-        totalSeats++;
-      }
-      if (catalog.type === 'side') {
-        sideCounts[mod.moduleId] = (sideCounts[mod.moduleId] || 0) + 1;
-      }
+      if (catalog.type === 'seat') totalSeats++;
 
       const sizeLabel = SIZE_LABEL[catalog.size] ?? catalog.size.toUpperCase();
       rects.push({ cx, cz, halfW: halfX, halfD: halfZ, label: sizeLabel });
+
+      // Build isometric module (position in cm, origin at top-left)
+      isoModules.push({
+        ox: cx - halfX,
+        oz: cz - halfZ,
+        w: halfX * 2,
+        d: halfZ * 2,
+        h: hCm,
+        type: catalog.type as 'seat' | 'side',
+        label: sizeLabel,
+      });
     }
 
-    // Most common seat/side module
-    const primarySeatId = Object.entries(seatCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'seat-m';
-    const primarySideId = Object.entries(sideCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'side-m';
+    // Normalize iso positions so minimum is at 0
+    const isoMinX = Math.min(...isoModules.map(m => m.ox));
+    const isoMinZ = Math.min(...isoModules.map(m => m.oz));
+    for (const m of isoModules) {
+      m.ox -= isoMinX;
+      m.oz -= isoMinZ;
+    }
 
     return {
       totalW: Math.round(maxX - minX),
@@ -527,19 +420,13 @@ export function SummaryModal({ open, onOpenChange }: SummaryModalProps) {
       totalH: maxHeight,
       counts: Object.values(counts),
       rects,
+      isoModules,
       minX, minZ,
       sofaW: maxX - minX,
       sofaD: maxZ - minZ,
       seatCount: totalSeats,
-      primarySeatId,
-      primarySideId,
     };
   }, [modules]);
-
-  const variations = useMemo(() => {
-    if (!data || data.seatCount < 2) return [];
-    return generateVariations(data.seatCount, data.primarySeatId, data.primarySideId);
-  }, [data]);
 
   if (!data) return null;
 
@@ -551,6 +438,17 @@ export function SummaryModal({ open, onOpenChange }: SummaryModalProps) {
       >
         <div className="px-[24px] pt-[24px] pb-[32px]">
           <DialogTitle className="sr-only">Sofa Details</DialogTitle>
+
+          {/* Isometric 3D illustration */}
+          <div className="flex justify-center mb-[20px]">
+            <div className="w-full max-w-[360px]">
+              <IsometricSofa
+                modules={data.isoModules}
+                totalW={data.totalW}
+                totalD={data.totalD}
+              />
+            </div>
+          </div>
 
           {/* Top-down schematic */}
           <div className="flex justify-center mb-[28px]">
@@ -591,20 +489,6 @@ export function SummaryModal({ open, onOpenChange }: SummaryModalProps) {
               <li>Sofa cover</li>
             </ul>
           </div>
-
-          {/* Possible product variations */}
-          {variations.length > 1 && (
-            <div>
-              <p className="text-[14px] font-medium text-black italic mb-[12px]">
-                Possible product variations
-              </p>
-              <div className="flex flex-col gap-[8px]">
-                {variations.map((v, i) => (
-                  <IsometricVariation key={i} variation={v} />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

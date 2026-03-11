@@ -24,6 +24,8 @@ export interface ConfigurationSlice {
   placeAccessory: (catalogId: string) => void;
   /** Remove an accessory by instance ID (no anchor disconnection needed). */
   removeAccessory: (instanceId: string) => void;
+  /** Rotate all modules by 180 degrees (PI) around the Y axis. */
+  rotateSofa: () => void;
 }
 
 export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], ConfigurationSlice> = (set, get) => ({
@@ -128,4 +130,15 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
     set((state) => ({
       modules: state.modules.filter((m) => m.instanceId !== instanceId),
     })),
+
+  rotateSofa: () => {
+    const { modules } = get();
+    if (modules.length === 0) return;
+    const rotated = modules.map((m) => ({
+      ...m,
+      position: [-m.position[0], m.position[1], -m.position[2]] as [number, number, number],
+      rotation: [m.rotation[0], m.rotation[1] + Math.PI, m.rotation[2]] as [number, number, number],
+    }));
+    set({ modules: rotated });
+  },
 });

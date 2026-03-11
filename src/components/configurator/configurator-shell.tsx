@@ -16,10 +16,12 @@ import { InlinePriceSection } from './inline-price-section';
 import { NotificationBar } from './notification-bar';
 import { CtaSection } from './cta-section';
 import { Footer } from './footer';
+import { HqRenderModal } from './hq-render-modal';
 
 export function ConfiguratorShell() {
   return (
     <div className="flex min-h-screen flex-col bg-white lg:h-screen lg:min-h-0 lg:overflow-hidden">
+      <HqRenderModal />
       <Header />
 
       {/* Main content: single-column mobile, two-column desktop */}
