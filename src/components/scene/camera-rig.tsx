@@ -7,14 +7,25 @@ import * as THREE from 'three';
 import { CAMERA_DEFAULTS } from '@/lib/config/constants';
 import { useStore } from '@/stores';
 
-const BIRD_EYE_POS = new THREE.Vector3(0, 6, 1.5); // high overview with slight angle
-const BIRD_EYE_TARGET = new THREE.Vector3(0, 0, 0);
+const BIRD_EYE_HEIGHT = 6;
+const BIRD_EYE_Z_OFFSET = 1.5; // slight forward angle
 const TRANSITION_SPEED = 0.08;
 const ZOOM_LERP_SPEED = 0.1;
 const DONE_THRESHOLD = 0.01;
 
 const DEFAULT_POS = new THREE.Vector3(...CAMERA_DEFAULTS.position);
 const DEFAULT_TARGET = new THREE.Vector3(...CAMERA_DEFAULTS.target);
+
+/** Compute the XZ center of all placed modules */
+function getSofaCenter(modules: { position: [number, number, number] }[]): [number, number] {
+  if (modules.length === 0) return [0, 0];
+  let sumX = 0, sumZ = 0;
+  for (const m of modules) {
+    sumX += m.position[0];
+    sumZ += m.position[2];
+  }
+  return [sumX / modules.length, sumZ / modules.length];
+}
 
 export function CameraRig() {
   const isDragging = useStore((s) => s.dragModuleId !== null);
@@ -40,9 +51,11 @@ export function CameraRig() {
           target: controlsRef.current.target.clone(),
         };
       }
+      // Center bird's eye on the sofa
+      const [cx, cz] = getSofaCenter(useStore.getState().modules);
       transitionTarget.current = {
-        position: BIRD_EYE_POS.clone(),
-        target: BIRD_EYE_TARGET.clone(),
+        position: new THREE.Vector3(cx, BIRD_EYE_HEIGHT, cz + BIRD_EYE_Z_OFFSET),
+        target: new THREE.Vector3(cx, 0, cz),
       };
       isTransitioning.current = true;
       invalidate();
@@ -78,13 +91,15 @@ export function CameraRig() {
     invalidate();
   }, [zoomTarget, camera, invalidate]);
 
-  // Handle reset camera
+  // Handle reset camera — center on sofa
   useEffect(() => {
     if (resetCameraFlag === 0) return;
 
+    const [cx, cz] = getSofaCenter(useStore.getState().modules);
+    const offset = DEFAULT_POS.clone().sub(DEFAULT_TARGET);
     transitionTarget.current = {
-      position: DEFAULT_POS.clone(),
-      target: DEFAULT_TARGET.clone(),
+      position: new THREE.Vector3(cx + offset.x, offset.y, cz + offset.z),
+      target: new THREE.Vector3(cx, DEFAULT_TARGET.y, cz),
     };
     isTransitioning.current = true;
     zoomDistTarget.current = null;
