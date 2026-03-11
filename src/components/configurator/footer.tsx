@@ -120,6 +120,9 @@ export function Footer() {
           </div>
           <p className="text-[12px] text-[#afafaf]">
             &copy; {new Date().getFullYear()} vetsak. All rights reserved.
+            {process.env.NEXT_PUBLIC_GIT_HASH && (
+              <span className="ml-2 text-[#545454]">v{process.env.NEXT_PUBLIC_GIT_HASH}</span>
+            )}
           </p>
         </div>
       </div>
