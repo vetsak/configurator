@@ -33,11 +33,14 @@ export interface DragSlice {
   isSnapped: boolean;
   /** Instance ID of the most recently placed module (for animation) */
   justPlacedId: string | null;
+  /** Screen-space origin where the drag started */
+  dragOrigin: { x: number; y: number } | null;
 
   startCatalogDrag: (moduleId: string) => void;
   startRepositionDrag: (instanceId: string) => void;
   updateGhost: (position: [number, number, number]) => void;
   setSnapTarget: (target: SnapTarget | null) => void;
+  setDragOrigin: (origin: { x: number; y: number } | null) => void;
   confirmDrop: () => void;
   cancelDrag: () => void;
 }
@@ -52,6 +55,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
   snapTarget: null,
   isSnapped: false,
   justPlacedId: null,
+  dragOrigin: null,
 
   startCatalogDrag: (moduleId) =>
     set({
@@ -92,6 +96,8 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
   updateGhost: (position) =>
     set({ ghostPosition: position }),
 
+  setDragOrigin: (origin) => set({ dragOrigin: origin }),
+
   setSnapTarget: (target) =>
     set({
       snapTarget: target,
@@ -110,6 +116,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
       ghostRotation: [0, 0, 0],
       snapTarget: null,
       isSnapped: false,
+      dragOrigin: null,
     }),
 
   cancelDrag: () => {
@@ -130,6 +137,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
       ghostRotation: [0, 0, 0],
       snapTarget: null,
       isSnapped: false,
+      dragOrigin: null,
     });
   },
 });

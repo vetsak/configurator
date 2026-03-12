@@ -8,6 +8,7 @@ import {
 } from './transform-utils';
 import { checkCollision } from './collision';
 import { computeSideSnap } from './side-placement';
+import { connectModules } from './engine';
 
 /** Maximum distance (meters) for snap activation. */
 const SNAP_THRESHOLD = 0.5;
@@ -207,4 +208,71 @@ export function findBestSnap(
   }
 
   return bestSnap;
+}
+
+/** Snap a world position to the 10.5cm grid. All vetsak module widths are multiples of 10.5cm. */
+export function snapToGrid(worldPos: [number, number, number]): [number, number, number] {
+  const GRID_SIZE = 0.105; // 10.5cm in meters
+  return [
+    Math.round(worldPos[0] / GRID_SIZE) * GRID_SIZE,
+    worldPos[1],
+    Math.round(worldPos[2] / GRID_SIZE) * GRID_SIZE,
+  ];
+}
+
+/**
+ * After a module is dropped, scan for nearby free anchors and auto-connect
+ * any pairs that are within 5cm and have opposing directions.
+ *
+ * Mutates anchor occupied flags and connectedTo arrays in place.
+ * Returns the (mutated) modules array for convenience.
+ *
+ * O(a_dropped * n * a_other) — negligible for ≤10 modules.
+ */
+export function softConnectNearby(
+  droppedModule: PlacedModule,
+  allModules: PlacedModule[]
+): PlacedModule[] {
+  const SOFT_CONNECT_THRESHOLD = 0.05; // 5cm in meters
+
+  const droppedRotY = droppedModule.rotation[1];
+  const droppedCatalog = MODULE_CATALOG[droppedModule.moduleId];
+  if (!droppedCatalog) return allModules;
+
+  // Build world-space free anchors for the dropped module
+  const droppedAnchors = droppedModule.anchors
+    .filter((a) => !a.occupied)
+    .map((a) => ({
+      anchor: a,
+      worldPos: transformAnchorToWorld(a.position, droppedModule.position, droppedRotY),
+      worldDir: transformDirectionToWorld(a.direction, droppedRotY),
+    }));
+
+  for (const other of allModules) {
+    if (other.instanceId === droppedModule.instanceId) continue;
+
+    const otherRotY = other.rotation[1];
+
+    for (const otherAnchor of other.anchors) {
+      if (otherAnchor.occupied) continue;
+
+      const otherWorldPos = transformAnchorToWorld(otherAnchor.position, other.position, otherRotY);
+      const otherWorldDir = transformDirectionToWorld(otherAnchor.direction, otherRotY);
+
+      for (const da of droppedAnchors) {
+        if (da.anchor.occupied) continue;
+
+        const dist = distance2D(da.worldPos, otherWorldPos);
+        if (dist > SOFT_CONNECT_THRESHOLD) continue;
+
+        const dot = dot3(da.worldDir, otherWorldDir);
+        if (dot > DIRECTION_OPPOSITION_THRESHOLD) continue;
+
+        // Anchors are close enough and opposing — connect them
+        connectModules(other, otherAnchor.id, droppedModule, da.anchor.id);
+      }
+    }
+  }
+
+  return allModules;
 }

@@ -51,7 +51,7 @@ export function StepModules() {
     <section className="bg-white px-[18px] py-[21px] lg:px-[28px] lg:py-[28px]">
       <div className="mb-[21px]">
         <p className="text-[18px] lg:text-[20px] text-black w-[384px] lg:w-auto">
-          Add seats and sites to your configuration
+          Add seats and sides to your configuration
         </p>
       </div>
 
@@ -67,7 +67,18 @@ export function StepModules() {
           return (
             <button
               key={id}
+              draggable
               onClick={() => handleClick(id)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', id);
+                e.dataTransfer.effectAllowed = 'copy';
+                startCatalogDrag(id);
+              }}
+              onDragEnd={() => {
+                // Cancel if not dropped on canvas (drop handler calls confirmDrop)
+                const { dragModuleId } = useStore.getState();
+                if (dragModuleId) cancelDrag();
+              }}
               className={`relative h-[114px] w-[89px] shrink-0 overflow-hidden rounded-[6px] border bg-white transition-colors ${
                 isActive ? 'border-black border-2' : 'border-black/20'
               }`}

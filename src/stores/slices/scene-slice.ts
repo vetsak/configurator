@@ -8,6 +8,8 @@ export interface SceneSlice {
   zoomTarget: number | null;
   /** When true, camera-rig lerps back to default position/target */
   resetCameraFlag: number; // incremented to trigger reset
+  /** Whether snap-to-grid / snap-to-anchor is enabled */
+  snapEnabled: boolean;
   /** HQ render state */
   isRenderingHQ: boolean;
   hqRenderResult: string | null; // data URL
@@ -21,6 +23,7 @@ export interface SceneSlice {
   clearZoomTarget: () => void;
   setRenderingHQ: (rendering: boolean) => void;
   setHqRenderResult: (result: string | null) => void;
+  toggleSnap: () => void;
   setHqRenderModalOpen: (open: boolean) => void;
 }
 
@@ -35,6 +38,7 @@ export const createSceneSlice: StateCreator<SceneSlice, [], [], SceneSlice> = (s
   isSceneReady: false,
   zoomTarget: null,
   resetCameraFlag: 0,
+  snapEnabled: true,
   isRenderingHQ: false,
   hqRenderResult: null,
   hqRenderModalOpen: false,
@@ -62,6 +66,8 @@ export const createSceneSlice: StateCreator<SceneSlice, [], [], SceneSlice> = (s
   },
 
   clearZoomTarget: () => set({ zoomTarget: null }),
+
+  toggleSnap: () => set({ snapEnabled: !get().snapEnabled }),
 
   setRenderingHQ: (rendering) => set({ isRenderingHQ: rendering }),
   setHqRenderResult: (result) => set({ hqRenderResult: result }),

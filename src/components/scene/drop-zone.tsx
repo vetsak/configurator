@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/stores';
-import { findBestSnap } from '@/lib/snapping/snap-detector-2d';
+import { findBestSnap, snapToGrid } from '@/lib/snapping/snap-detector-2d';
 import { createPlacedModule } from '@/lib/snapping/engine';
 
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -55,7 +55,12 @@ export function DropZone() {
         setSnapTarget(snap);
       } else {
         setSnapTarget(null);
-        updateGhost(worldPos);
+        const { snapEnabled } = useStore.getState();
+        if (snapEnabled) {
+          updateGhost(snapToGrid(worldPos));
+        } else {
+          updateGhost(worldPos);
+        }
       }
 
       invalidate();
@@ -85,7 +90,22 @@ export function DropZone() {
       }
 
       // Normal snap placement
-      if (!snapTarget) return;
+      if (!snapTarget) {
+        const { snapEnabled } = useStore.getState();
+        if (!snapEnabled && worldPos) {
+          // Free placement when snap is disabled
+          if (dragSource === 'catalog') {
+            const newModule = createPlacedModule(dragModuleId, worldPos);
+            addModule(newModule);
+          } else if (dragSource === 'reposition' && dragInstanceId) {
+            const { updateModule } = useStore.getState();
+            updateModule(dragInstanceId, { position: worldPos, rotation: [0, 0, 0] });
+          }
+          confirmDrop();
+          invalidate();
+        }
+        return;
+      }
 
       if (dragSource === 'catalog') {
         placeSnappedModule(dragModuleId, snapTarget);
@@ -102,12 +122,84 @@ export function DropZone() {
       invalidate();
     };
 
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault(); // Required to allow drop
+      e.dataTransfer!.dropEffect = 'copy';
+
+      const { dragModuleId, modules, setSnapTarget, updateGhost } = useStore.getState();
+      if (!dragModuleId) return;
+
+      const worldPos = getGroundPoint(e as unknown as PointerEvent);
+      if (!worldPos) return;
+
+      // If there are no modules yet, just update ghost position (no snap targets)
+      if (modules.length === 0) {
+        setSnapTarget(null);
+        updateGhost(worldPos);
+        invalidate();
+        return;
+      }
+
+      const snap = findBestSnap(worldPos, dragModuleId, modules);
+      if (snap) {
+        setSnapTarget(snap);
+      } else {
+        setSnapTarget(null);
+        const { snapEnabled } = useStore.getState();
+        if (snapEnabled) {
+          updateGhost(snapToGrid(worldPos));
+        } else {
+          updateGhost(worldPos);
+        }
+      }
+      invalidate();
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      const { dragModuleId, snapTarget, modules, placeSnappedModule, addModule, confirmDrop, snapEnabled } = useStore.getState();
+      if (!dragModuleId) return;
+
+      if (modules.length === 0) {
+        const worldPos = getGroundPoint(e as unknown as PointerEvent);
+        if (worldPos) {
+          const pos = snapEnabled ? snapToGrid(worldPos) : worldPos;
+          const newModule = createPlacedModule(dragModuleId, pos);
+          addModule(newModule);
+          confirmDrop();
+          invalidate();
+        }
+        return;
+      }
+
+      if (snapTarget) {
+        placeSnappedModule(dragModuleId, snapTarget);
+        const latestModules = useStore.getState().modules;
+        const newest = latestModules[latestModules.length - 1];
+        if (newest) useStore.setState({ justPlacedId: newest.instanceId });
+      } else if (!snapEnabled) {
+        // Free placement - no snap
+        const worldPos = getGroundPoint(e as unknown as PointerEvent);
+        if (worldPos) {
+          const newModule = createPlacedModule(dragModuleId, worldPos);
+          addModule(newModule);
+        }
+      }
+
+      confirmDrop();
+      invalidate();
+    };
+
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('dragover', handleDragOver);
+    canvas.addEventListener('drop', handleDrop);
 
     return () => {
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('dragover', handleDragOver);
+      canvas.removeEventListener('drop', handleDrop);
     };
   }, [camera, gl, invalidate]);
 

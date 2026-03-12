@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useThree, useFrame, ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/stores';
 import type { PlacedModule } from '@/types/configurator';
@@ -142,15 +142,43 @@ export function GlbModule({ module, material, modelPath, isSelected, onSelect }:
     invalidate();
   }, [clonedScene, invalidate]);
 
+  // Click-and-drag handler: dead zone distinguishes click (select) from drag (reposition)
+  const handlePointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    const startX = e.nativeEvent.clientX;
+    const startY = e.nativeEvent.clientY;
+
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (Math.sqrt(dx * dx + dy * dy) > 5) {
+        // Past dead zone — start drag reposition
+        cleanup();
+        useStore.getState().startRepositionDrag(module.instanceId);
+      }
+    };
+
+    const onUp = () => {
+      cleanup();
+      // Didn't drag — treat as click (select)
+      onSelect?.(module.instanceId);
+    };
+
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, [module.instanceId, onSelect]);
+
   return (
     <group
       ref={groupRef}
       position={module.position}
       rotation={module.rotation}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect?.(module.instanceId);
-      }}
+      onPointerDown={handlePointerDown}
     >
       <primitive object={clonedScene} scale={[UNIT_SCALE, UNIT_SCALE, UNIT_SCALE]} />
     </group>

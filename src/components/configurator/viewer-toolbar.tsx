@@ -32,6 +32,8 @@ function ToolbarButton({
 }
 
 export function ViewerToolbar() {
+  const snapEnabled = useStore((s) => s.snapEnabled);
+  const toggleSnap = useStore((s) => s.toggleSnap);
   const showDimensions = useStore((s) => s.showDimensions);
   const toggleDimensions = useStore((s) => s.toggleDimensions);
   const zoomIn = useStore((s) => s.zoomIn);
@@ -68,6 +70,18 @@ export function ViewerToolbar() {
 
   const toolbarItems = (
     <>
+      {/* Snap toggle */}
+      <ToolbarButton
+        onClick={() => { toggleSnap(); setMobileOpen(false); }}
+        title="Toggle snap"
+        active={snapEnabled}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 1h4v2h1a2 2 0 0 1 2 2v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V5a2 2 0 0 1 2-2h1V1z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          <path d="M8 12v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        </svg>
+      </ToolbarButton>
+
       {/* Show dimensions toggle */}
       <ToolbarButton
         onClick={() => { toggleDimensions(); setMobileOpen(false); }}
