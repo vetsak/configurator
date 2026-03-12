@@ -51,10 +51,11 @@ export function preloadCordNormalMap(): Promise<void> {
   // Preload the default (platinum) textures
   const defaultColour = FABRICS.cord_velour?.colours[0];
   if (!defaultColour) return Promise.resolve();
-  preloadPromise = Promise.all([
-    loadTextureCached(defaultColour.normalMapPath, true),
-    loadTextureCached(defaultColour.texturePath),
-  ]).then(() => {}).catch(() => { preloadPromise = null; });
+  const loads: Promise<any>[] = [];
+  if (defaultColour.texturePath) loads.push(loadTextureCached(defaultColour.texturePath));
+  if (defaultColour.normalMapPath) loads.push(loadTextureCached(defaultColour.normalMapPath, true));
+  if (loads.length === 0) return Promise.resolve();
+  preloadPromise = Promise.all(loads).then(() => {}).catch(() => { preloadPromise = null; });
   return preloadPromise;
 }
 
@@ -93,28 +94,32 @@ function getCordMaterial(selection: MaterialSelection): THREE.MeshStandardMateri
   if (colour) {
     const normalScale = fabric?.normalScale ?? 1.0;
 
-    // Diffuse map — every color has one
-    const cachedDiffuse = textureCache.get(colour.texturePath);
-    if (cachedDiffuse) {
-      material.map = cachedDiffuse;
-    } else {
-      loadTextureCached(colour.texturePath).then((map) => {
-        material.map = map;
-        material.needsUpdate = true;
-      }).catch(() => {});
+    // Diffuse map
+    if (colour.texturePath) {
+      const cachedDiffuse = textureCache.get(colour.texturePath);
+      if (cachedDiffuse) {
+        material.map = cachedDiffuse;
+      } else {
+        loadTextureCached(colour.texturePath).then((map) => {
+          material.map = map;
+          material.needsUpdate = true;
+        }).catch(() => {});
+      }
     }
 
-    // Normal map — every color has one
-    const cachedNormal = textureCache.get(colour.normalMapPath);
-    if (cachedNormal) {
-      material.normalMap = cachedNormal;
-      material.normalScale.set(normalScale, normalScale);
-    } else {
-      loadTextureCached(colour.normalMapPath, true).then((normalMap) => {
-        material.normalMap = normalMap;
+    // Normal map (only if path exists)
+    if (colour.normalMapPath) {
+      const cachedNormal = textureCache.get(colour.normalMapPath);
+      if (cachedNormal) {
+        material.normalMap = cachedNormal;
         material.normalScale.set(normalScale, normalScale);
-        material.needsUpdate = true;
-      }).catch(() => {});
+      } else {
+        loadTextureCached(colour.normalMapPath, true).then((normalMap) => {
+          material.normalMap = normalMap;
+          material.normalScale.set(normalScale, normalScale);
+          material.needsUpdate = true;
+        }).catch(() => {});
+      }
     }
   }
 

@@ -86,6 +86,7 @@ export function StepMaterial() {
               key={`${fabric.id}-${colour.id}`}
               onClick={() => handleSwatchClick(fabric, colour)}
               className="relative"
+              title={`${fabric.name} – ${colour.name}`}
             >
               <div
                 className={`h-[52px] w-[42px] overflow-hidden rounded-[6px] ${

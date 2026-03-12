@@ -18,7 +18,7 @@ function loadBakedCatalog(): { fabrics: FabricDefinition[]; priceLookup: Map<str
       id: c.id,
       name: c.name,
       hex: c.hex,
-      texturePath: '',
+      texturePath: c.textureLocal ?? '',
       normalMapPath: '',
       swatchPath: c.swatchLocal ?? '',
       swatchUrl: c.swatchUrl ?? c.swatchLocal ?? null,
