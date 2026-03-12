@@ -118,20 +118,32 @@ export function StepSize() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
 
-  const { totalWidthCm, currentDepth } = useMemo(() => {
-    let width = 0;
+  const { seatWidthCm, fullWidthCm, currentDepth } = useMemo(() => {
+    let seatWidth = 0;
+    let minX = Infinity, maxX = -Infinity;
     for (const mod of modules) {
-      // Only count seat modules — the slider controls seat width, not sides
-      if (mod.type !== 'seat') continue;
       const catalog = MODULE_CATALOG[mod.moduleId];
       if (!catalog) continue;
+      if (catalog.type !== 'seat' && catalog.type !== 'side') continue;
+
       const ry = mod.rotation[1];
       const cosR = Math.abs(Math.cos(ry));
       const sinR = Math.abs(Math.sin(ry));
-      width += catalog.dimensions.width * cosR + catalog.dimensions.depth * sinR;
+      const extentX = (catalog.dimensions.width * cosR + catalog.dimensions.depth * sinR) / 2;
+
+      // Full AABB for display width
+      minX = Math.min(minX, mod.position[0] - extentX);
+      maxX = Math.max(maxX, mod.position[0] + extentX);
+
+      // Seat-only width for slider logic
+      if (mod.type === 'seat') {
+        seatWidth += catalog.dimensions.width * cosR + catalog.dimensions.depth * sinR;
+      }
     }
+    const full = minX === Infinity ? 0 : Math.round((maxX - minX) * 100);
     return {
-      totalWidthCm: Math.round(width * 100),
+      seatWidthCm: Math.round(seatWidth * 100),
+      fullWidthCm: full,
       currentDepth: getDepthFromModules(modules),
     };
   }, [modules]);
@@ -140,8 +152,10 @@ export function StepSize() {
   const minWidth = widthSteps[0];
   const maxWidth = widthSteps[widthSteps.length - 1];
 
-  const displayWidth = dragWidth ?? totalWidthCm;
-  const pct = Math.max(0, Math.min(100, ((displayWidth - minWidth) / (maxWidth - minWidth)) * 100));
+  // Slider tracks seat width; pill displays full sofa width (seats + sides)
+  const sliderWidth = dragWidth ?? seatWidthCm;
+  const displayWidth = dragWidth ?? fullWidthCm;
+  const pct = Math.max(0, Math.min(100, ((sliderWidth - minWidth) / (maxWidth - minWidth)) * 100));
 
   // Clamp pill so it doesn't overflow container edges
   const pillHalfW = 46;
@@ -173,11 +187,11 @@ export function StepSize() {
   }, [modules, currentDepth, widthSteps, setModules]);
 
   const getWidthFromPointer = useCallback((clientX: number) => {
-    if (!trackRef.current) return totalWidthCm;
+    if (!trackRef.current) return seatWidthCm;
     const rect = trackRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     return minWidth + ratio * (maxWidth - minWidth);
-  }, [totalWidthCm, minWidth, maxWidth]);
+  }, [seatWidthCm, minWidth, maxWidth]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
@@ -203,12 +217,12 @@ export function StepSize() {
     }
   }, [isDragging, dragWidth, applyWidth]);
 
-  // Clear dragWidth once modules have rebuilt and totalWidthCm matches
+  // Clear dragWidth once modules have rebuilt and seatWidthCm catches up
   useEffect(() => {
     if (!isDragging && dragWidth !== null) {
       setDragWidth(null);
     }
-  }, [totalWidthCm]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [seatWidthCm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDepthChange = useCallback((depthCm: number) => {
     const depthMap = DEPTH_MODULE_MAP[depthCm];
@@ -220,10 +234,10 @@ export function StepSize() {
     const mapSeatId = (moduleId: string): string => {
       const catalog = MODULE_CATALOG[moduleId];
       if (!catalog || catalog.type !== 'seat') return moduleId;
-      const seatWidthCm = Math.round(catalog.dimensions.width * 100);
-      const newSeatId = depthMap[seatWidthCm];
+      const seatW = Math.round(catalog.dimensions.width * 100);
+      const newSeatId = depthMap[seatW];
       if (newSeatId) {
-        if (newSeatId !== moduleId && seatWidthCm !== Math.round(MODULE_CATALOG[newSeatId].dimensions.width * 100)) {
+        if (newSeatId !== moduleId && seatW !== Math.round(MODULE_CATALOG[newSeatId].dimensions.width * 100)) {
           substituted = true;
         }
         return newSeatId;

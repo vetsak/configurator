@@ -49,47 +49,49 @@ export function ArPreviewBanner() {
     <>
       {/* AR Mode CTA */}
       <section className="bg-white px-[18px] py-[10px] lg:px-[28px]">
-        <div className="flex items-center gap-[16px] rounded-[16px] bg-[#f5f4ef] p-[20px]">
-          <div className="shrink-0 flex h-[56px] w-[56px] items-center justify-center rounded-[14px] bg-white shadow-[0px_1px_4px_rgba(0,0,0,0.06)]">
-            <ArIcon className="h-[32px] w-[32px] text-[#3d3d3d]" />
+        <div className="rounded-[12px] bg-[#f5f4ef] px-[15px] py-[21px]">
+          <div className="mb-[11px]">
+            <ArIcon className="h-[40px] w-[40px] text-[#3d3d3d]" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold text-black leading-tight">
-              Place your sofa at home
-            </p>
-            <p className="text-[12px] text-black/45 mt-[4px] leading-[1.4]">
-              Use your phone&apos;s camera to see how your vetsak sofa fits in your space.
-            </p>
-          </div>
+
+          <h3 className="mb-[11px] text-[21px] font-medium text-black">
+            Place your sofa at home
+          </h3>
+
+          <p className="mb-[11px] text-[13px] text-black/60 leading-normal">
+            Use your phone&apos;s camera to see how your vetsak sofa fits in your space.
+          </p>
+
           <button
             onClick={triggerAR}
             disabled={isExporting}
-            className="shrink-0 rounded-full bg-black px-[16px] py-[8px] text-[12px] font-medium text-white transition-colors hover:bg-black/85 disabled:opacity-50"
+            className="rounded-[50px] border-[0.7px] border-black bg-black px-[12px] py-[7px] text-[12px] text-white transition-colors hover:bg-black/85 disabled:opacity-50"
           >
-            {isExporting ? 'Preparing...' : isSupported ? 'Try AR' : 'Download 3D'}
+            {isExporting ? 'Preparing...' : isSupported ? 'View in your room' : 'Download 3D model'}
           </button>
         </div>
       </section>
 
       {/* AI Rendering CTA */}
       <section className="bg-white px-[18px] py-[10px] lg:px-[28px]">
-        <div className="flex items-center gap-[16px] rounded-[16px] bg-[#f5f4ef] p-[20px]">
-          <div className="shrink-0 flex h-[56px] w-[56px] items-center justify-center rounded-[14px] bg-white shadow-[0px_1px_4px_rgba(0,0,0,0.06)]">
-            <AiRenderIcon className="h-[32px] w-[32px] text-[#3d3d3d]" />
+        <div className="rounded-[12px] bg-[#f5f4ef] px-[15px] py-[21px]">
+          <div className="mb-[11px]">
+            <AiRenderIcon className="h-[40px] w-[40px] text-[#3d3d3d]" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold text-black leading-tight">
-              Picture it in your room
-            </p>
-            <p className="text-[12px] text-black/45 mt-[4px] leading-[1.4]">
-              Snap a photo of your living room and we&apos;ll place your sofa right into the scene.
-            </p>
-          </div>
+
+          <h3 className="mb-[11px] text-[21px] font-medium text-black">
+            Picture it in your room
+          </h3>
+
+          <p className="mb-[11px] text-[13px] text-black/60 leading-normal">
+            Snap a photo of your living room and we&apos;ll place your sofa right into the scene.
+          </p>
+
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className="shrink-0 rounded-full bg-black px-[16px] py-[8px] text-[12px] font-medium text-white transition-colors hover:bg-black/85"
+            className="rounded-[50px] border-[0.7px] border-black bg-black px-[12px] py-[7px] text-[12px] text-white transition-colors hover:bg-black/85"
           >
-            Try AI
+            Generate photo
           </button>
         </div>
       </section>
