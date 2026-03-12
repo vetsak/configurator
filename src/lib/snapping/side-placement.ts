@@ -73,25 +73,24 @@ export function computeSideSnap(
     hostAnchorWorldPos[2] + hostAnchorWorldDir[2] * halfDepth,
   ];
 
-  // Back-align armrests with the backrest's outer edge.
-  // The armrest's back edge should be flush with the back of the backrest (not the seat).
+  // Align armrests with the seat's back edge.
   //
   // Top-down view (non-rotated seat):
-  //         [  BACK  ]
+  //            [BACK]
   //   [ARM] [  SEAT  ] [ARM]
   //
-  // Armrest back edge must align with backrest outer edge at Z = -(seatDepth/2 + backDepth).
-  // Armrest is currently centered at Z=0 (seat center). Shift = seatDepth/2 - armrestWidth/2 + backDepth.
-  // Only applies to left/right anchors (key is ±1,0,0).
+  // The armrest's back edge aligns with the seat's back edge.
+  // This keeps the armrest flush with both front and back of the seat.
+  // The backrest extends slightly further back — matching real sofa proportions.
   if (hostDepth != null && hostRotationY != null && (key === '-1,0,0' || key === '1,0,0')) {
     const armrestWidth = sideCatalog.dimensions.width; // becomes Z extent after rotation
-    const shiftBackward = hostDepth / 2 - armrestWidth / 2 + (backDepth ?? 0);
-    // Apply shift in local -Z direction (back), rotated to world
-    const cosH = Math.cos(hostRotationY);
-    const sinH = Math.sin(hostRotationY);
-    // local [0,0,-1] → world [-sinH, 0, -cosH]
-    position[0] += -sinH * shiftBackward;
-    position[2] += -cosH * shiftBackward;
+    const shiftBackward = (hostDepth - armrestWidth) / 2;
+    if (Math.abs(shiftBackward) > 0.001) {
+      const cosH = Math.cos(hostRotationY);
+      const sinH = Math.sin(hostRotationY);
+      position[0] += -sinH * shiftBackward;
+      position[2] += -cosH * shiftBackward;
+    }
   }
 
   return {

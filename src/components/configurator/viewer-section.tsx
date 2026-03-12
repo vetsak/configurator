@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { ChatbotIcon, MenuDotsIcon } from '@/components/icons';
 import { ModuleActions } from './module-actions';
 import { ViewerToolbar } from './viewer-toolbar';
+import { useStore } from '@/stores';
 
 const CanvasWrapper = dynamic(
   () => import('@/components/scene/canvas-wrapper').then((m) => m.CanvasWrapper),
@@ -11,6 +12,8 @@ const CanvasWrapper = dynamic(
 );
 
 export function ViewerSection() {
+  const setSaveModalOpen = useStore((s) => s.setSaveModalOpen);
+
   return (
     <div className="h-[307px] w-full lg:h-full">
       <div className="relative h-full w-full rounded-[12px] bg-[#fcfcf7] overflow-hidden lg:rounded-none">
@@ -25,7 +28,10 @@ export function ViewerSection() {
 
         {/* Save configuration pill button */}
         <div className="absolute bottom-[7%] left-1/2 -translate-x-1/2 z-20">
-          <button className="rounded-[50px] border-[3px] border-black/10 bg-white px-6 py-2 text-[12px] font-medium text-black shadow-[0px_0px_24px_0px_rgba(0,0,0,0.05)]">
+          <button
+            onClick={() => setSaveModalOpen(true)}
+            className="rounded-[50px] border-[3px] border-black/10 bg-white px-6 py-2 text-[12px] font-medium text-black shadow-[0px_0px_24px_0px_rgba(0,0,0,0.05)]"
+          >
             Save configuration
           </button>
         </div>

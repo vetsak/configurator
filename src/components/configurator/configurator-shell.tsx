@@ -17,11 +17,19 @@ import { NotificationBar } from './notification-bar';
 import { CtaSection } from './cta-section';
 import { Footer } from './footer';
 import { HqRenderModal } from './hq-render-modal';
+import { SaveConfigModal } from './save-config-modal';
+import { RestoreConfigPrompt } from './restore-config-prompt';
+import { useStore } from '@/stores';
 
 export function ConfiguratorShell() {
+  const saveModalOpen = useStore((s) => s.saveModalOpen);
+  const setSaveModalOpen = useStore((s) => s.setSaveModalOpen);
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <HqRenderModal />
+      <SaveConfigModal open={saveModalOpen} onClose={() => setSaveModalOpen(false)} />
+      <RestoreConfigPrompt />
 
       {/* Configurator — fills exactly 100vh on desktop */}
       <div className="flex flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">

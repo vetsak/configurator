@@ -473,25 +473,14 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
     const placeArmrest = (edge: typeof freeEdges[0]) => {
       const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
       if (!seatCatalog) return;
+
+      // Pick armrest size matching seat depth only (not seat + back).
+      // The armrest aligns with the seat's back edge; the backrest
+      // naturally extends further back — matching real sofa proportions.
       const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
       const sideId = pickSideForDimension(depthCm);
 
-      // Check if this seat has a back placed — armrest should align with backrest outer edge
-      const backAnchor = edge.module.anchors.find((a) => a.id === 'back');
-      let backDepth = 0;
-      if (backAnchor?.occupied) {
-        // Find the back side module to get its depth
-        const backConn = edge.module.connectedTo.find((c) => c.anchorId === 'back');
-        if (backConn) {
-          const backSide = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
-          if (backSide) {
-            const backCatalog = MODULE_CATALOG[backSide.moduleId];
-            if (backCatalog) backDepth = backCatalog.dimensions.depth;
-          }
-        }
-      }
-
-      const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId, backDepth);
+      const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId);
       if (!side) return;
       newSides.push(side);
     };

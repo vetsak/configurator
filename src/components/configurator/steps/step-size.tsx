@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useRef, useState } from 'react';
+import { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import { useStore } from '@/stores';
 import { MODULE_CATALOG } from '@/lib/config/modules';
 import { buildLinear, buildShape, autoPlaceSides } from '@/lib/snapping/layout-solver';
@@ -121,8 +121,8 @@ export function StepSize() {
   const { totalWidthCm, currentDepth } = useMemo(() => {
     let width = 0;
     for (const mod of modules) {
-      // Only count structural modules (seats + sides) for sofa dimensions
-      if (mod.type !== 'seat' && mod.type !== 'side') continue;
+      // Only count seat modules — the slider controls seat width, not sides
+      if (mod.type !== 'seat') continue;
       const catalog = MODULE_CATALOG[mod.moduleId];
       if (!catalog) continue;
       const ry = mod.rotation[1];
@@ -198,9 +198,17 @@ export function StepSize() {
     setIsDragging(false);
     if (dragWidth !== null) {
       applyWidth(dragWidth);
+      // Don't clear dragWidth here — keep it as display override until
+      // modules rebuild and totalWidthCm catches up (see useEffect below).
     }
-    setDragWidth(null);
   }, [isDragging, dragWidth, applyWidth]);
+
+  // Clear dragWidth once modules have rebuilt and totalWidthCm matches
+  useEffect(() => {
+    if (!isDragging && dragWidth !== null) {
+      setDragWidth(null);
+    }
+  }, [totalWidthCm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDepthChange = useCallback((depthCm: number) => {
     const depthMap = DEPTH_MODULE_MAP[depthCm];

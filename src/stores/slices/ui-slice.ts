@@ -13,12 +13,14 @@ export interface UiSlice {
   notification: Notification | null;
   showDimensions: boolean;
   inlinePriceVisible: boolean;
+  saveModalOpen: boolean;
   setCurrentStep: (step: ConfigStep) => void;
   setLoading: (loading: boolean) => void;
   showNotification: (message: string, type?: 'info' | 'success') => void;
   clearNotification: () => void;
   toggleDimensions: () => void;
   setInlinePriceVisible: (visible: boolean) => void;
+  setSaveModalOpen: (open: boolean) => void;
 }
 
 export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
@@ -27,6 +29,7 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   notification: null,
   showDimensions: false,
   inlinePriceVisible: false,
+  saveModalOpen: false,
 
   setCurrentStep: (step) => set({ currentStep: step }),
   setLoading: (loading) => set({ isLoading: loading }),
@@ -34,4 +37,5 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   clearNotification: () => set({ notification: null }),
   toggleDimensions: () => set((s) => ({ showDimensions: !s.showDimensions })),
   setInlinePriceVisible: (visible) => set({ inlinePriceVisible: visible }),
+  setSaveModalOpen: (open) => set({ saveModalOpen: open }),
 });

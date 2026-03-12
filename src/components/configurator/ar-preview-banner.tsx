@@ -15,7 +15,10 @@ export function ArPreviewBanner() {
         <div className="flex items-center justify-between rounded-[12px] bg-[#eee] p-[15px]">
           <div className="flex flex-col gap-[3px]">
             <p className="text-[18px] font-medium text-black w-[188px]">
-              See your sofa in your living room
+              Place your sofa at home
+            </p>
+            <p className="text-[12px] text-black/50 mt-[2px] w-[188px]">
+              Use your phone&apos;s camera to see exactly how your vetsak sofa fits in your space — before you order.
             </p>
           </div>
           <button
@@ -33,7 +36,10 @@ export function ArPreviewBanner() {
         <div className="flex items-center justify-between rounded-[12px] bg-[#eee] p-[15px]">
           <div className="flex flex-col gap-[3px]">
             <p className="text-[18px] font-medium text-black w-[188px]">
-              See your sofa in your living room
+              Picture it in your room
+            </p>
+            <p className="text-[12px] text-black/50 mt-[2px] w-[188px]">
+              Snap a photo of your living room and we&apos;ll place your configured sofa right into the scene.
             </p>
           </div>
           <button

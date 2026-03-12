@@ -7,9 +7,9 @@ import { useSofaPrice } from '@/hooks/use-sofa-price';
 export function CtaSection() {
   const modules = useStore((s) => s.modules);
   const selectedMaterial = useStore((s) => s.selectedMaterial);
-  const presetId = useStore((s) => s.presetId);
   const addToCart = useStore((s) => s.addToCart);
   const showNotification = useStore((s) => s.showNotification);
+  const setSaveModalOpen = useStore((s) => s.setSaveModalOpen);
   const { total } = useSofaPrice();
 
   const handleAddToCart = useCallback(() => {
@@ -24,18 +24,8 @@ export function CtaSection() {
   }, [addToCart, total, modules.length, selectedMaterial, showNotification]);
 
   const handleSaveConfig = useCallback(() => {
-    const config = {
-      modules: modules.map((m) => ({
-        moduleId: m.moduleId,
-        position: m.position,
-        rotation: m.rotation,
-      })),
-      material: selectedMaterial,
-      presetId,
-    };
-    localStorage.setItem('vetsak-config', JSON.stringify(config));
-    showNotification('Configuration saved!', 'success');
-  }, [modules, selectedMaterial, presetId, showNotification]);
+    setSaveModalOpen(true);
+  }, [setSaveModalOpen]);
 
   return (
     <section className="bg-white px-[18px] py-[21px] flex flex-col gap-[9px] items-start">
