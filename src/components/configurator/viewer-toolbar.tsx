@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, FlipHorizontal2, Camera } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { ZoomIn, ZoomOut, RotateCcw, FlipHorizontal2, Camera, Menu, X } from 'lucide-react';
 import { useStore } from '@/stores';
 import { renderSofaHQ } from '@/lib/three/sofa-renderer';
 
@@ -39,6 +39,7 @@ export function ViewerToolbar() {
   const resetCamera = useStore((s) => s.resetCamera);
   const rotateSofa = useStore((s) => s.rotateSofa);
   const isRendering = useStore((s) => s.isRenderingHQ);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleRenderHQ = useCallback(async () => {
     const state = useStore.getState();
@@ -65,11 +66,11 @@ export function ViewerToolbar() {
     }
   }, []);
 
-  return (
-    <div className="absolute left-[4.2%] top-[3.6%] z-20 flex gap-[6px] lg:flex-col lg:top-1/2 lg:-translate-y-1/2 lg:left-[16px]">
+  const toolbarItems = (
+    <>
       {/* Show dimensions toggle */}
       <button
-        onClick={toggleDimensions}
+        onClick={() => { toggleDimensions(); setMobileOpen(false); }}
         className={`flex h-[32px] items-center gap-[4px] rounded-[50px] border-[2px] px-[10px] text-[10px] font-medium shadow-[0px_0px_12px_0px_rgba(0,0,0,0.05)] ${
           showDimensions
             ? 'border-black bg-black text-white'
@@ -77,7 +78,6 @@ export function ViewerToolbar() {
         }`}
         title="Toggle dimensions"
       >
-        {/* Ruler icon */}
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M1 5h14v6H1V5zm2 0v3m2-3v2m2-2v3m2-3v2m2-2v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
         </svg>
@@ -85,28 +85,28 @@ export function ViewerToolbar() {
       </button>
 
       {/* Zoom in */}
-      <ToolbarButton onClick={zoomIn} title="Zoom in">
+      <ToolbarButton onClick={() => { zoomIn(); setMobileOpen(false); }} title="Zoom in">
         <ZoomIn size={16} strokeWidth={2} />
       </ToolbarButton>
 
       {/* Zoom out */}
-      <ToolbarButton onClick={zoomOut} title="Zoom out">
+      <ToolbarButton onClick={() => { zoomOut(); setMobileOpen(false); }} title="Zoom out">
         <ZoomOut size={16} strokeWidth={2} />
       </ToolbarButton>
 
       {/* Reset camera */}
-      <ToolbarButton onClick={resetCamera} title="Reset camera">
+      <ToolbarButton onClick={() => { resetCamera(); setMobileOpen(false); }} title="Reset camera">
         <RotateCcw size={14} strokeWidth={2} />
       </ToolbarButton>
 
       {/* Rotate sofa 180 degrees */}
-      <ToolbarButton onClick={rotateSofa} title="Rotate sofa 180°">
+      <ToolbarButton onClick={() => { rotateSofa(); setMobileOpen(false); }} title="Rotate sofa 180°">
         <FlipHorizontal2 size={16} strokeWidth={2} />
       </ToolbarButton>
 
       {/* HQ Render */}
       <button
-        onClick={handleRenderHQ}
+        onClick={() => { handleRenderHQ(); setMobileOpen(false); }}
         disabled={isRendering}
         className={`flex h-[32px] items-center gap-[4px] rounded-[50px] border-[2px] px-[10px] text-[10px] font-medium shadow-[0px_0px_12px_0px_rgba(0,0,0,0.05)] transition-colors ${
           isRendering
@@ -118,6 +118,32 @@ export function ViewerToolbar() {
         <Camera className="h-[14px] w-[14px]" />
         <span>{isRendering ? '...' : 'HQ'}</span>
       </button>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop: always visible vertical column */}
+      <div className="absolute left-[16px] top-1/2 -translate-y-1/2 z-20 hidden lg:flex lg:flex-col gap-[6px]">
+        {toolbarItems}
+      </div>
+
+      {/* Mobile: toggle button + expandable menu */}
+      <div className="absolute left-[4.2%] top-[3.6%] z-20 lg:hidden">
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="flex h-[32px] w-[32px] items-center justify-center rounded-full border-[2px] border-black/10 bg-white text-black shadow-[0px_0px_12px_0px_rgba(0,0,0,0.05)]"
+          title="Tools"
+        >
+          {mobileOpen ? <X size={16} strokeWidth={2} /> : <Menu size={16} strokeWidth={2} />}
+        </button>
+
+        {mobileOpen && (
+          <div className="absolute left-0 top-[38px] flex flex-col gap-[6px] animate-in fade-in slide-in-from-top-1 duration-150">
+            {toolbarItems}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
