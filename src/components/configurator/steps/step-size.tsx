@@ -311,7 +311,7 @@ export function StepSize() {
 
           {/* Thumb circle on the track */}
           <div
-            className={`absolute bottom-[-5px] h-[18px] w-[18px] -translate-x-1/2 rounded-full bg-black border-[3px] border-white shadow-md pointer-events-none ${isDragging ? 'scale-125' : ''}`}
+            className={`absolute bottom-[0px] h-[18px] w-[18px] -translate-x-1/2 rounded-full bg-black border-[3px] border-white shadow-md pointer-events-none ${isDragging ? 'scale-125' : ''}`}
             style={{ left: `${pct}%`, transition: isDragging ? 'none' : 'left 0.2s ease' }}
           />
         </div>
