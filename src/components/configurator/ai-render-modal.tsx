@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useAiRender, type AiRenderStatus } from '@/hooks/use-ai-render';
 import type { Placement } from '@/lib/api/ai-render-client';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface AiRenderModalProps {
   open: boolean;
@@ -27,7 +28,13 @@ function UploadView({
   onGenerate: () => void;
   isGenerating: boolean;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onUpload(file);
+  };
 
   return (
     <div className="flex flex-col gap-[15px]">
@@ -39,20 +46,24 @@ function UploadView({
       </div>
 
       <input
-        ref={inputRef}
+        ref={galleryRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      <input
+        ref={cameraRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) onUpload(file);
-        }}
+        onChange={handleFileChange}
       />
 
       {roomImage ? (
         <button
-          onClick={() => inputRef.current?.click()}
+          onClick={() => galleryRef.current?.click()}
           className="relative w-full overflow-hidden rounded-[12px] border border-black/10"
         >
           <img
@@ -65,12 +76,31 @@ function UploadView({
           </span>
         </button>
       ) : (
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="flex h-[180px] w-full items-center justify-center rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-[14px] text-black/40"
-        >
-          Tap to upload a room photo
-        </button>
+        <div className="flex gap-[10px]">
+          <button
+            onClick={() => galleryRef.current?.click()}
+            className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[140px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
+          >
+            {/* Gallery / landscape icon */}
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span className="text-[13px]">Upload photo</span>
+          </button>
+          <button
+            onClick={() => cameraRef.current?.click()}
+            className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[140px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
+          >
+            {/* Camera icon */}
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <span className="text-[13px]">Take photo</span>
+          </button>
+        </div>
       )}
 
       <button
@@ -215,8 +245,6 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
     reset,
   } = useAiRender();
 
-  if (!open) return null;
-
   const view = viewForStatus(status);
 
   const handleClose = () => {
@@ -239,16 +267,10 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/40"
-        onClick={status === 'generating' ? undefined : handleClose}
-      />
-
-      {/* Bottom sheet (mobile) / centered dialog (desktop) */}
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:max-w-[520px] lg:w-full">
-        <div className="rounded-t-[16px] bg-white px-[18px] pb-[36px] pt-[21px] shadow-[0px_-4px_24px_0px_rgba(0,0,0,0.15)] lg:rounded-[16px]">
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent showCloseButton={false} className="max-w-[430px] rounded-[20px] p-0 border-none">
+        <DialogTitle className="sr-only">AI Room Preview</DialogTitle>
+        <div className="px-[18px] pb-[36px] pt-[21px]">
           {/* Close button */}
           {status !== 'generating' && (
             <div className="flex justify-end mb-[6px]">
@@ -291,8 +313,7 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
             />
           )}
         </div>
-      </div>
-
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }
