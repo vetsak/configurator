@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { MODULE_MATERIAL_SLOTS, LEGS_COLOR, ETIKETT_COLOR } from '@/lib/config/constants';
 import { FABRICS } from '@/lib/config/materials';
-import type { MaterialSelection } from '@/types/materials';
+import type { MaterialSelection, FabricDefinition } from '@/types/materials';
 import { textureManager } from './texture-manager';
 
 /**
@@ -75,13 +75,23 @@ export function getMaterialForSlot(
   }
 }
 
+// Store catalog reference — updated by setFabricCatalogForMaterials
+let _catalogFabrics: FabricDefinition[] = [];
+
+/** Call from the store after catalog loads to make Shopify textures available. */
+export function setFabricCatalogForMaterials(fabrics: FabricDefinition[]): void {
+  _catalogFabrics = fabrics;
+}
+
 function getCordMaterial(selection: MaterialSelection): THREE.MeshStandardMaterial {
   const key = `${selection.fabricId}-${selection.colourId}`;
 
   const cached = cordMaterialCache.get(key);
   if (cached) return cached;
 
-  const fabric = FABRICS[selection.fabricId];
+  // Prefer Shopify catalog (has texture paths), fall back to hardcoded
+  const catalogFabric = _catalogFabrics.find((f) => f.id === selection.fabricId);
+  const fabric = catalogFabric ?? FABRICS[selection.fabricId];
   const colour = fabric?.colours.find((c) => c.id === selection.colourId);
 
   const material = new THREE.MeshStandardMaterial({

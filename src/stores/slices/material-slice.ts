@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { FabricDefinition, MaterialSelection } from '@/types/materials';
 import catalogData from '@/lib/config/fabric-catalog.json';
+import { setFabricCatalogForMaterials } from '@/lib/three/material-factory';
 
 // ── Build baked-in catalog at module load ──────────────────────
 
@@ -38,6 +39,9 @@ function loadBakedCatalog(): { fabrics: FabricDefinition[]; priceLookup: Map<str
 }
 
 const baked = loadBakedCatalog();
+
+// Sync catalog to material-factory so 3D materials can find Shopify textures
+setFabricCatalogForMaterials(baked.fabrics);
 
 // ── Slice ──────────────────────────────────────────────────────
 

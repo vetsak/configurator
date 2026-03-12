@@ -23,7 +23,10 @@ class TextureManager {
         path,
         (texture) => {
           texture.colorSpace = THREE.SRGBColorSpace;
-          texture.flipY = false;
+          // GLB-embedded UVs expect flipY=false; standalone images (JPG/PNG) need flipY=true
+          // Textures from /textures/shopify/ or /textures/cord/ are standalone files
+          const isStandalone = path.includes('/textures/');
+          texture.flipY = isStandalone;
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           this.put(path, texture);
