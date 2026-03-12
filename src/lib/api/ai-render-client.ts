@@ -4,6 +4,8 @@ interface RenderRequest {
   roomImage: string;
   sofaImage: string;
   placement?: Placement;
+  sofaDimensions?: { widthCm: number; depthCm: number };
+  personOnSofa?: boolean;
 }
 
 interface RenderResponse {

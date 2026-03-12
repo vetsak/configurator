@@ -7,6 +7,8 @@ interface RenderRequest {
   roomImage: string;
   sofaImage: string;
   placement?: 'center' | 'left' | 'right' | 'against-wall';
+  sofaDimensions?: { widthCm: number; depthCm: number };
+  personOnSofa?: boolean;
 }
 
 const PLACEMENT_HINTS: Record<string, string> = {
@@ -85,15 +87,30 @@ export default {
       const placement = body.placement ?? 'center';
       const placementHint = PLACEMENT_HINTS[placement] ?? PLACEMENT_HINTS.center;
 
-      const prompt = [
+      const promptParts = [
         'You are an expert interior designer and photorealistic renderer.',
         'Composite the sofa from the second image into the room shown in the first image.',
         'The sofa should look naturally placed with correct perspective, lighting, and shadows that match the room.',
         "Maintain the room's existing lighting, color temperature, and atmosphere.",
         "The sofa should cast soft shadows on the floor consistent with the room's light sources.",
         placementHint,
-        'The result must be photorealistic — indistinguishable from a real photo.',
-      ].join(' ');
+      ];
+
+      if (body.sofaDimensions) {
+        promptParts.push(
+          `The sofa is ${body.sofaDimensions.widthCm}cm wide and ${body.sofaDimensions.depthCm}cm deep. Scale it accurately relative to the room's features like doors (~200cm tall), windows, and other furniture.`
+        );
+      }
+
+      if (body.personOnSofa) {
+        promptParts.push(
+          'Place a person sitting naturally and comfortably on the sofa. If there is a person visible in the room photo, use their appearance. Otherwise, add a realistic-looking person. The person should look relaxed and natural.'
+        );
+      }
+
+      promptParts.push('The result must be photorealistic — indistinguishable from a real photo.');
+
+      const prompt = promptParts.join(' ');
 
       const room = stripDataPrefix(body.roomImage);
       const sofa = stripDataPrefix(body.sofaImage);

@@ -41,7 +41,7 @@ export function useAiRender() {
     reader.readAsDataURL(file);
   }, []);
 
-  const generate = useCallback(async (placement?: Placement) => {
+  const generate = useCallback(async (placement?: Placement, personOnSofa?: boolean) => {
     if (!roomImage) return;
 
     try {
@@ -56,6 +56,26 @@ export function useAiRender() {
         return;
       }
 
+      // Compute sofa dimensions from modules for accurate sizing
+      const { MODULE_CATALOG } = await import('@/lib/config/modules');
+      let minX = Infinity, maxX = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      for (const mod of modules) {
+        const catalog = MODULE_CATALOG[mod.moduleId];
+        if (!catalog) continue;
+        const ry = mod.rotation[1];
+        const cosR = Math.abs(Math.cos(ry));
+        const sinR = Math.abs(Math.sin(ry));
+        const extX = (catalog.dimensions.width * cosR + catalog.dimensions.depth * sinR) / 2;
+        const extZ = (catalog.dimensions.width * sinR + catalog.dimensions.depth * cosR) / 2;
+        minX = Math.min(minX, mod.position[0] - extX);
+        maxX = Math.max(maxX, mod.position[0] + extX);
+        minZ = Math.min(minZ, mod.position[2] - extZ);
+        maxZ = Math.max(maxZ, mod.position[2] + extZ);
+      }
+      const widthCm = Math.round((maxX - minX) * 100);
+      const depthCm = Math.round((maxZ - minZ) * 100);
+
       // Dynamic import to avoid bundling Three.js renderer for all users
       const { renderSofaToPNG } = await import('@/lib/three/sofa-renderer');
       const sofaImage = await renderSofaToPNG(modules, selectedMaterial);
@@ -67,6 +87,8 @@ export function useAiRender() {
         roomImage,
         sofaImage,
         placement: placement ?? 'center',
+        sofaDimensions: { widthCm, depthCm },
+        personOnSofa: personOnSofa ?? false,
       });
 
       // If result is a base64 string without prefix, add it
@@ -84,7 +106,7 @@ export function useAiRender() {
   }, [roomImage]);
 
   const regenerate = useCallback(
-    (placement?: Placement) => generate(placement),
+    (placement?: Placement, personOnSofa?: boolean) => generate(placement, personOnSofa),
     [generate]
   );
 

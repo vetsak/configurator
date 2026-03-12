@@ -142,12 +142,14 @@ function ResultView({
   resultImage,
   onRegenerate,
   onReposition,
+  onPersonOnSofa,
   onNewPhoto,
   onDownload,
 }: {
   resultImage: string;
   onRegenerate: () => void;
   onReposition: (p: Placement) => void;
+  onPersonOnSofa: () => void;
   onNewPhoto: () => void;
   onDownload: () => void;
 }) {
@@ -172,6 +174,12 @@ function ResultView({
             {p.label}
           </button>
         ))}
+        <button
+          onClick={onPersonOnSofa}
+          className="shrink-0 rounded-[50px] border border-black/20 px-[14px] py-[6px] text-[12px] text-black"
+        >
+          Person on sofa
+        </button>
       </div>
 
       {/* Actions */}
@@ -254,12 +262,23 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
 
   const handleDownload = () => {
     if (!resultImage) return;
+    // Convert base64 data URL to blob for reliable download
+    const byteString = atob(resultImage.split(',')[1]);
+    const mimeType = resultImage.split(',')[0].match(/:(.*?);/)?.[1] ?? 'image/png';
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeType });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = resultImage;
+    link.href = url;
     link.download = 'vetsak-room-preview.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleNewPhoto = () => {
@@ -301,6 +320,7 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
               resultImage={resultImage}
               onRegenerate={() => regenerate()}
               onReposition={(p) => regenerate(p)}
+              onPersonOnSofa={() => regenerate(undefined, true)}
               onNewPhoto={handleNewPhoto}
               onDownload={handleDownload}
             />
