@@ -1,0 +1,7 @@
+name = "vetsak-config-share"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "CONFIG_STORE"
+id = "fbe11c97f3384afe864d2282f4c31806"

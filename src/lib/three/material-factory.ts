@@ -138,6 +138,25 @@ function getCordMaterial(selection: MaterialSelection): THREE.MeshStandardMateri
 }
 
 /**
+ * Pre-load all textures for a given material selection and resolve once they are
+ * in the cache. Call before `buildExportScene` to guarantee materials are fully
+ * textured when the scene is built synchronously.
+ */
+export async function ensureTexturesLoaded(
+  selection: MaterialSelection
+): Promise<void> {
+  const catalogFabric = _catalogFabrics.find((f) => f.id === selection.fabricId);
+  const fabric = catalogFabric ?? FABRICS[selection.fabricId];
+  const colour = fabric?.colours.find((c) => c.id === selection.colourId);
+  if (!colour) return;
+
+  const loads: Promise<any>[] = [];
+  if (colour.texturePath) loads.push(loadTextureCached(colour.texturePath));
+  if (colour.normalMapPath) loads.push(loadTextureCached(colour.normalMapPath, true));
+  if (loads.length > 0) await Promise.all(loads);
+}
+
+/**
  * Clear cached cord materials — call when switching colours.
  */
 export function invalidateCordMaterials(): void {

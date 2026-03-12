@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useArExport } from '@/hooks/use-ar-export';
+import { useStore } from '@/stores';
 import { AiRenderModal } from './ai-render-modal';
+import { ArQrModal } from './ar-qr-modal';
 
 function ArIcon({ className }: { className?: string }) {
   return (
@@ -42,7 +44,10 @@ function AiRenderIcon({ className }: { className?: string }) {
 }
 
 export function ArPreviewBanner() {
-  const { triggerAR, isExporting, isSupported } = useArExport();
+  const { triggerAR, isExporting, buttonLabel } = useArExport();
+  const arQrModalOpen = useStore((s) => s.arQrModalOpen);
+  const arQrUrl = useStore((s) => s.arQrUrl);
+  const setArQrModalOpen = useStore((s) => s.setArQrModalOpen);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   return (
@@ -67,7 +72,7 @@ export function ArPreviewBanner() {
             disabled={isExporting}
             className="rounded-[50px] border-[0.7px] border-black bg-black px-[12px] py-[7px] text-[12px] text-white transition-colors hover:bg-black/85 disabled:opacity-50"
           >
-            {isExporting ? 'Preparing...' : isSupported ? 'View in your room' : 'Download 3D model'}
+            {isExporting ? 'Preparing...' : buttonLabel}
           </button>
         </div>
       </section>
@@ -97,6 +102,7 @@ export function ArPreviewBanner() {
       </section>
 
       <AiRenderModal open={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />
+      <ArQrModal open={arQrModalOpen} onOpenChange={setArQrModalOpen} configUrl={arQrUrl} />
     </>
   );
 }
