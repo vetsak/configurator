@@ -63,9 +63,7 @@ export function computeSideSnap(
 
   // Offset the side center from the host anchor along the host direction
   // by half the side's depth (which becomes the X extent after rotation).
-  // Subtract a small overlap (5mm) to close visual gaps from model bevels.
-  const GAP_COMPENSATION = 0.005;
-  const halfDepth = sideCatalog.dimensions.depth / 2 - GAP_COMPENSATION;
+  const halfDepth = sideCatalog.dimensions.depth / 2;
 
   const position: [number, number, number] = [
     hostAnchorWorldPos[0] + hostAnchorWorldDir[0] * halfDepth,

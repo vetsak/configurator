@@ -12,11 +12,11 @@ import {
 /* ── Spec dimensions ─────────────────────────────────────── */
 
 const MODULE_SPECS: Record<string, { height: number; length: number; width: number }> = {
-  'seat-xs': { height: 37, length: 84, width: 63 },
-  'seat-s':  { height: 37, length: 105, width: 63 },
-  'seat-m':  { height: 37, length: 84, width: 84 },
-  'seat-l':  { height: 37, length: 105, width: 84 },
-  'seat-xl': { height: 37, length: 105, width: 105 },
+  'seat-xs': { height: 38, length: 84, width: 63 },
+  'seat-s':  { height: 38, length: 105, width: 63 },
+  'seat-m':  { height: 38, length: 84, width: 84 },
+  'seat-l':  { height: 38, length: 105, width: 84 },
+  'seat-xl': { height: 38, length: 105, width: 105 },
   'side-s':  { height: 60, length: 63, width: 31 },
   'side-m':  { height: 60, length: 84, width: 31 },
   'side-l':  { height: 60, length: 105, width: 31 },
