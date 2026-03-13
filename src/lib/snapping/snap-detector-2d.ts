@@ -33,6 +33,8 @@ export interface SnapResult {
   guestAnchorId: string;
   position: [number, number, number];
   rotation: [number, number, number];
+  /** Edge-alignment zone used (null if same-size or non-seat connection) */
+  snapZone?: 'back' | 'center' | 'front' | null;
 }
 
 /**
@@ -85,7 +87,8 @@ export function findBestSnap(
   cursorWorldPos: [number, number, number],
   dragModuleId: string,
   modules: PlacedModule[],
-  excludeInstanceId?: string
+  excludeInstanceId?: string,
+  currentSnapZone?: SnapZone | null,
 ): SnapResult | null {
   const dragCatalog = MODULE_CATALOG[dragModuleId];
   if (!dragCatalog || modules.length === 0) return null;
@@ -98,6 +101,7 @@ export function findBestSnap(
 
   let bestSnap: SnapResult | null = null;
   let bestDist = SNAP_THRESHOLD;
+  let newSnapZone: SnapZone | null = null;
 
   for (const hostAnchor of freeAnchors) {
     // Check if the host anchor is compatible with the drag module type
@@ -185,6 +189,31 @@ export function findBestSnap(
           hostAnchor.worldPos[2] - rotatedGuestAnchorPos[2],
         ];
         snapRot = [0, rotationY, 0];
+
+        // Edge-aligned snap zones: shift perpendicular for mixed-size seats
+        if (dragType === 'seat' && hostAnchor.moduleType === 'seat') {
+          const hostCatalogEntry = MODULE_CATALOG[hostAnchor.moduleId];
+          if (hostCatalogEntry) {
+            const hostMod = modules.find((m) => m.instanceId === hostAnchor.instanceId);
+            if (hostMod) {
+              const alignment = computeAlignmentOffset(
+                hostAnchor.anchorId,
+                hostCatalogEntry.dimensions,
+                dragCatalog.dimensions,
+                hostAnchor.rotationY,
+                cursorWorldPos,
+                hostMod.position,
+                hostMod,
+                currentSnapZone ?? null,
+              );
+              if (alignment) {
+                snapPos[0] += alignment.offset[0];
+                snapPos[2] += alignment.offset[2];
+                newSnapZone = alignment.zone;
+              }
+            }
+          }
+        }
       }
 
       // Distance from cursor to snap position (use snap center, not anchor)
@@ -203,11 +232,110 @@ export function findBestSnap(
         guestAnchorId: guestAnchorTemplate.id,
         position: snapPos,
         rotation: snapRot,
+        snapZone: newSnapZone,
       };
     }
   }
 
   return bestSnap;
+}
+
+// ---------------------------------------------------------------------------
+// Edge-aligned snap zones for mixed-size seat connections
+// ---------------------------------------------------------------------------
+
+type SnapZone = 'back' | 'center' | 'front';
+
+/**
+ * Determine the snap zone based on normalized cursor projection, with hysteresis.
+ * Positive normalized = toward default (back/outer) side.
+ * Zones: back [+∞, -0.15], center [-0.15, -0.5], front [-0.5, -∞]
+ */
+function pickZone(normalized: number, current: SnapZone | null): SnapZone {
+  // Hysteresis: stay in current zone if cursor hasn't clearly crossed boundary
+  if (current === 'back' && normalized > -0.25) return 'back';
+  if (current === 'center' && normalized > -0.6 && normalized < -0.05) return 'center';
+  if (current === 'front' && normalized < -0.4) return 'front';
+
+  // Fresh determination
+  if (normalized > -0.15) return 'back';
+  if (normalized > -0.5) return 'center';
+  return 'front';
+}
+
+/**
+ * Compute the perpendicular offset for edge-aligned snapping between two
+ * seats of different sizes. Returns a world-space offset to add to snapPos.
+ *
+ * Only activates when the perpendicular dimension differs between host and guest.
+ * Uses cursor position along the host edge to pick one of 3 zones:
+ * back-aligned (sticky default), center, or front-aligned.
+ *
+ * For front/back anchors (L/U shapes), the sticky default aligns the guest's
+ * outer edge with the host's outer edge (detected via free left/right anchors).
+ */
+export function computeAlignmentOffset(
+  hostAnchorId: string,
+  hostDimensions: { width: number; depth: number },
+  guestDimensions: { width: number; depth: number },
+  hostRotY: number,
+  cursorWorldPos: [number, number, number],
+  hostModulePos: [number, number, number],
+  hostModule: PlacedModule,
+  currentSnapZone: SnapZone | null,
+): { offset: [number, number, number]; zone: SnapZone } | null {
+  const isLeftRight = hostAnchorId === 'left' || hostAnchorId === 'right';
+
+  // Perpendicular dimension: depth for left/right, width for front/back
+  const hostDim = isLeftRight ? hostDimensions.depth : hostDimensions.width;
+  const guestDim = isLeftRight ? guestDimensions.depth : guestDimensions.width;
+  const dimDiff = hostDim - guestDim;
+
+  // Same size → no alignment offset needed
+  if (Math.abs(dimDiff) < 0.001) return null;
+
+  // Perpendicular world axis (rotated from local)
+  // left/right: perp = local +Z = [sin(rotY), 0, cos(rotY)]
+  // front/back: perp = local +X = [cos(rotY), 0, -sin(rotY)]
+  const perpX = isLeftRight ? Math.sin(hostRotY) : Math.cos(hostRotY);
+  const perpZ = isLeftRight ? Math.cos(hostRotY) : -Math.sin(hostRotY);
+
+  // Project cursor offset from host center onto perpendicular axis
+  const dx = cursorWorldPos[0] - hostModulePos[0];
+  const dz = cursorWorldPos[2] - hostModulePos[2];
+  const projection = dx * perpX + dz * perpZ;
+
+  // Determine default direction sign:
+  // left/right: default = back = -perpAxis → defaultSign = -1
+  // front/back: default = outer edge → check free left/right anchors
+  let defaultSign: number;
+  if (isLeftRight) {
+    defaultSign = -1; // back is negative perp direction
+  } else {
+    const leftFree = hostModule.anchors.some((a) => a.id === 'left' && !a.occupied);
+    const rightFree = hostModule.anchors.some((a) => a.id === 'right' && !a.occupied);
+    // Outer = free side. Right free → outer is +X local (+perpAxis) → defaultSign = +1
+    defaultSign = rightFree && !leftFree ? 1 : leftFree && !rightFree ? -1 : 1;
+  }
+
+  // Normalize: positive = toward default direction
+  const halfDim = hostDim / 2;
+  const normalized = (projection / halfDim) * defaultSign;
+
+  const zone = pickZone(normalized, currentSnapZone);
+
+  // Compute offset along perpendicular world axis
+  // back: shift guest toward default direction → defaultSign * dimDiff/2
+  // front: shift guest away from default → -defaultSign * dimDiff/2
+  let offsetMag: number;
+  if (zone === 'back') offsetMag = (defaultSign * dimDiff) / 2;
+  else if (zone === 'front') offsetMag = (-defaultSign * dimDiff) / 2;
+  else offsetMag = 0;
+
+  return {
+    offset: [offsetMag * perpX, 0, offsetMag * perpZ],
+    zone,
+  };
 }
 
 /** Snap a world position to the 10.5cm grid. All vetsak module widths are multiples of 10.5cm. */

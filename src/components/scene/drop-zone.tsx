@@ -35,7 +35,7 @@ export function DropZone() {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      const { dragModuleId, dragInstanceId, modules, setSnapTarget, updateGhost } = useStore.getState();
+      const { dragModuleId, dragInstanceId, modules, setSnapTarget, updateGhost, snapZone } = useStore.getState();
       if (!dragModuleId) return;
 
       const worldPos = getGroundPoint(e);
@@ -49,12 +49,14 @@ export function DropZone() {
         return;
       }
 
-      const snap = findBestSnap(worldPos, dragModuleId, modules, dragInstanceId ?? undefined);
+      const snap = findBestSnap(worldPos, dragModuleId, modules, dragInstanceId ?? undefined, snapZone);
 
       if (snap) {
         setSnapTarget(snap);
+        if (snap.snapZone !== undefined) useStore.setState({ snapZone: snap.snapZone });
       } else {
         setSnapTarget(null);
+        useStore.setState({ snapZone: null });
         const { snapEnabled } = useStore.getState();
         if (snapEnabled) {
           updateGhost(snapToGrid(worldPos));
@@ -140,11 +142,14 @@ export function DropZone() {
         return;
       }
 
-      const snap = findBestSnap(worldPos, dragModuleId, modules);
+      const { snapZone } = useStore.getState();
+      const snap = findBestSnap(worldPos, dragModuleId, modules, undefined, snapZone);
       if (snap) {
         setSnapTarget(snap);
+        if (snap.snapZone !== undefined) useStore.setState({ snapZone: snap.snapZone });
       } else {
         setSnapTarget(null);
+        useStore.setState({ snapZone: null });
         const { snapEnabled } = useStore.getState();
         if (snapEnabled) {
           updateGhost(snapToGrid(worldPos));

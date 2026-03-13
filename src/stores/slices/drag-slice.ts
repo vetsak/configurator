@@ -35,6 +35,8 @@ export interface DragSlice {
   justPlacedId: string | null;
   /** Screen-space origin where the drag started */
   dragOrigin: { x: number; y: number } | null;
+  /** Current edge-alignment zone for hysteresis (mixed-size snapping) */
+  snapZone: 'back' | 'center' | 'front' | null;
 
   startCatalogDrag: (moduleId: string) => void;
   startRepositionDrag: (instanceId: string) => void;
@@ -56,6 +58,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
   isSnapped: false,
   justPlacedId: null,
   dragOrigin: null,
+  snapZone: null,
 
   startCatalogDrag: (moduleId) =>
     set({
@@ -117,6 +120,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
       snapTarget: null,
       isSnapped: false,
       dragOrigin: null,
+      snapZone: null,
     }),
 
   cancelDrag: () => {
@@ -138,6 +142,7 @@ export const createDragSlice: StateCreator<DragSlice, [], [], DragSlice> = (set,
       snapTarget: null,
       isSnapped: false,
       dragOrigin: null,
+      snapZone: null,
     });
   },
 });

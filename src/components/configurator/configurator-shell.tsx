@@ -19,6 +19,7 @@ import { Footer } from './footer';
 import { HqRenderModal } from './hq-render-modal';
 import { SaveConfigModal } from './save-config-modal';
 import { RestoreConfigPrompt } from './restore-config-prompt';
+import { WelcomeBackModal } from './welcome-back-modal';
 import { useStore } from '@/stores';
 
 export function ConfiguratorShell() {
@@ -30,6 +31,7 @@ export function ConfiguratorShell() {
       <HqRenderModal />
       <SaveConfigModal open={saveModalOpen} onClose={() => setSaveModalOpen(false)} />
       <RestoreConfigPrompt />
+      <WelcomeBackModal />
 
       {/* Configurator — fills exactly 100vh on desktop */}
       <div className="flex flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
