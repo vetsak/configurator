@@ -6,6 +6,7 @@ interface RenderRequest {
   placement?: Placement;
   sofaDimensions?: { widthCm: number; depthCm: number };
   personOnSofa?: boolean;
+  roomScale?: { pixelsPerCm: number };
 }
 
 interface RenderResponse {
