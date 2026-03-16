@@ -53,5 +53,8 @@ next-env.d.ts
 # playwright MCP
 .playwright-mcp/
 
+# git worktrees
+.worktrees/
+
 # shadcn config
 components.json
