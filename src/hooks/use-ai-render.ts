@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useStore } from '@/stores';
 import type { Placement } from '@/lib/api/ai-render-client';
+import type { ScaleResult } from '@/lib/scale/scale-resolver';
 
 export type AiRenderStatus = 'idle' | 'preparing' | 'generating' | 'done' | 'error';
 
@@ -11,6 +12,7 @@ export function useAiRender() {
   const [roomImage, setRoomImage] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scaleResult, setScaleResult] = useState<ScaleResult | null>(null);
 
   /** Resize an image file to max 2048px on longest side, return base64 */
   const uploadRoom = useCallback((file: File) => {
@@ -34,6 +36,7 @@ export function useAiRender() {
         setRoomImage(base64);
         setResultImage(null);
         setError(null);
+        setScaleResult(null);
         setStatus('idle');
       };
       img.src = reader.result as string;
@@ -82,6 +85,20 @@ export function useAiRender() {
 
       setStatus('generating');
 
+      // Validate scale if available
+      let roomScale: { pixelsPerCm: number } | undefined;
+      if (scaleResult?.pixelsPerCm) {
+        const { validateScale } = await import('@/lib/scale/reference-detector');
+        const img = new Image();
+        const imgWidth = await new Promise<number>((resolve) => {
+          img.onload = () => resolve(img.width);
+          img.src = roomImage;
+        });
+        if (validateScale(scaleResult.pixelsPerCm, widthCm, imgWidth)) {
+          roomScale = { pixelsPerCm: scaleResult.pixelsPerCm };
+        }
+      }
+
       const { requestAiRender } = await import('@/lib/api/ai-render-client');
       const result = await requestAiRender({
         roomImage,
@@ -89,6 +106,7 @@ export function useAiRender() {
         placement: placement ?? 'center',
         sofaDimensions: { widthCm, depthCm },
         personOnSofa: personOnSofa ?? false,
+        roomScale,
       });
 
       // If result is a base64 string without prefix, add it
@@ -103,7 +121,7 @@ export function useAiRender() {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
       setStatus('error');
     }
-  }, [roomImage]);
+  }, [roomImage, scaleResult]);
 
   const regenerate = useCallback(
     (placement?: Placement, personOnSofa?: boolean) => generate(placement, personOnSofa),
@@ -115,6 +133,7 @@ export function useAiRender() {
     setRoomImage(null);
     setResultImage(null);
     setError(null);
+    setScaleResult(null);
   }, []);
 
   return {
@@ -122,6 +141,8 @@ export function useAiRender() {
     roomImage,
     resultImage,
     error,
+    scaleResult,
+    setScaleResult,
     uploadRoom,
     generate,
     regenerate,
