@@ -244,9 +244,21 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
   // Transition to scale step once room image is ready
   useEffect(() => {
     if (roomImage && phase === 'upload') {
-      setPhase('scale');
+      // Check for LiDAR — if available, skip scale step
+      import('@/lib/scale/scale-resolver').then(async ({ hasLiDAR, resolveLidarScale }) => {
+        if (await hasLiDAR()) {
+          const result = await resolveLidarScale();
+          if (result.pixelsPerCm !== null) {
+            setScaleResult(result);
+            generate();
+            return;
+          }
+        }
+        // No LiDAR or LiDAR failed — show reference object step
+        setPhase('scale');
+      });
     }
-  }, [roomImage, phase]);
+  }, [roomImage, phase, setScaleResult, generate]);
 
   const handleScaleResolved = (result: ScaleResult) => {
     setScaleResult(result);

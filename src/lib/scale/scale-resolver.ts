@@ -20,6 +20,25 @@ export async function hasLiDAR(): Promise<boolean> {
   }
 }
 
+/** Try LiDAR-based scale detection */
+export async function resolveLidarScale(): Promise<ScaleResult> {
+  try {
+    const { captureLidarScale } = await import('./lidar-depth');
+    const result = await captureLidarScale();
+    if (result) {
+      return {
+        method: 'lidar',
+        pixelsPerCm: result.pixelsPerCm,
+        confidence: 1.0,
+        disclaimer: false,
+      };
+    }
+  } catch {
+    // LiDAR failed, fall through
+  }
+  return { method: 'none', pixelsPerCm: null, confidence: 0, disclaimer: true };
+}
+
 export async function resolveScale(
   imageBase64: string,
   refObject: ReferenceObject | null,
