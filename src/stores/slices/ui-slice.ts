@@ -16,7 +16,6 @@ export interface UiSlice {
   saveModalOpen: boolean;
   arQrModalOpen: boolean;
   arQrUrl: string | null;
-  welcomeBackOpen: boolean;
   setCurrentStep: (step: ConfigStep) => void;
   setLoading: (loading: boolean) => void;
   showNotification: (message: string, type?: 'info' | 'success') => void;
@@ -26,7 +25,6 @@ export interface UiSlice {
   setSaveModalOpen: (open: boolean) => void;
   setArQrModalOpen: (open: boolean) => void;
   setArQrUrl: (url: string | null) => void;
-  setWelcomeBackOpen: (open: boolean) => void;
 }
 
 export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
@@ -38,7 +36,6 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   saveModalOpen: false,
   arQrModalOpen: false,
   arQrUrl: null,
-  welcomeBackOpen: false,
 
   setCurrentStep: (step) => set({ currentStep: step }),
   setLoading: (loading) => set({ isLoading: loading }),
@@ -49,5 +46,4 @@ export const createUiSlice: StateCreator<UiSlice, [], [], UiSlice> = (set) => ({
   setSaveModalOpen: (open) => set({ saveModalOpen: open }),
   setArQrModalOpen: (open) => set({ arQrModalOpen: open }),
   setArQrUrl: (url) => set({ arQrUrl: url }),
-  setWelcomeBackOpen: (open) => set({ welcomeBackOpen: open }),
 });

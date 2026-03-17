@@ -12,7 +12,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const setModules = useStore((s) => s.setModules);
   const setPresetId = useStore((s) => s.setPresetId);
   const setMaterial = useStore((s) => s.setMaterial);
-  const setWelcomeBackOpen = useStore((s) => s.setWelcomeBackOpen);
   const modules = useStore((s) => s.modules);
   const { isRestoring, restoredFromShare } = useConfigRestore();
   const restoredFromLocal = useRef(false);
@@ -35,7 +34,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         if (saved.presetId) setPresetId(saved.presetId);
         if (saved.material) setMaterial(saved.material);
         restoredFromLocal.current = true;
-        setWelcomeBackOpen(true);
         return;
       }
 
