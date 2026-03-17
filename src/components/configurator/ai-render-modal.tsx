@@ -1,10 +1,11 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { CreditCard, FileText, BookOpen, Footprints, type LucideProps } from 'lucide-react';
 import { useAiRender, type AiRenderStatus } from '@/hooks/use-ai-render';
 import type { Placement } from '@/lib/api/ai-render-client';
 import type { ScaleResult } from '@/lib/scale/scale-resolver';
-import { RoomScaleStep } from './room-scale-step';
+import { REFERENCE_OBJECTS, type ReferenceObject } from '@/lib/scale/reference-objects';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface AiRenderModalProps {
@@ -19,12 +20,27 @@ const PLACEMENTS: { id: Placement; label: string }[] = [
   { id: 'against-wall', label: 'Against wall' },
 ];
 
-type Phase = 'upload' | 'scale' | 'generating' | 'result' | 'error';
+const ICONS: Record<string, React.FC<LucideProps>> = {
+  CreditCard,
+  FileText,
+  BookOpen,
+  Footprints,
+};
+
+type Phase = 'upload' | 'generating' | 'result' | 'error';
 
 function UploadView({
   onUpload,
+  selectedRef,
+  onSelectRef,
+  userInput,
+  onUserInputChange,
 }: {
   onUpload: (file: File) => void;
+  selectedRef: ReferenceObject | null;
+  onSelectRef: (obj: ReferenceObject | null) => void;
+  userInput: string;
+  onUserInputChange: (val: string) => void;
 }) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -39,9 +55,52 @@ function UploadView({
       <div>
         <p className="text-[18px] font-medium text-black">AI Room Preview</p>
         <p className="text-[13px] text-black/50 mt-[3px]">
-          Upload a photo of your room to see your sofa in it
+          For better size accuracy, place one of these on the floor, then take a photo of your room
         </p>
       </div>
+
+      {/* Reference object grid */}
+      <div className="grid grid-cols-2 gap-[8px]">
+        {REFERENCE_OBJECTS.map((obj) => {
+          const Icon = ICONS[obj.icon] ?? CreditCard;
+          const isSelected = selectedRef?.id === obj.id;
+          return (
+            <button
+              key={obj.id}
+              onClick={() => onSelectRef(isSelected ? null : obj)}
+              className={`flex flex-col items-center gap-[6px] rounded-[12px] border-[2px] p-[12px] transition-colors ${
+                isSelected
+                  ? 'border-black bg-black/[0.04]'
+                  : 'border-black/10 hover:border-black/30'
+              }`}
+            >
+              <Icon size={22} className={isSelected ? 'text-black' : 'text-black/40'} />
+              <span className={`text-[12px] ${isSelected ? 'text-black font-medium' : 'text-black/60'}`}>
+                {obj.label}
+              </span>
+              {obj.widthCm && obj.heightCm && (
+                <span className="text-[10px] text-black/30">
+                  {obj.widthCm} x {obj.heightCm} cm
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Shoe length input */}
+      {selectedRef?.requiresInput && (
+        <div className="flex items-center gap-[8px]">
+          <label className="text-[13px] text-black/60">{selectedRef.inputLabel}</label>
+          <input
+            type="number"
+            value={userInput}
+            onChange={(e) => onUserInputChange(e.target.value)}
+            placeholder="e.g. 27"
+            className="w-[80px] rounded-[8px] border border-black/20 px-[10px] py-[6px] text-[13px] text-black"
+          />
+        </div>
+      )}
 
       <input
         ref={galleryRef}
@@ -62,9 +121,9 @@ function UploadView({
       <div className="flex gap-[10px]">
         <button
           onClick={() => galleryRef.current?.click()}
-          className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[140px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
+          className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[100px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <circle cx="8.5" cy="8.5" r="1.5" />
             <path d="M21 15l-5-5L5 21" />
@@ -73,9 +132,9 @@ function UploadView({
         </button>
         <button
           onClick={() => cameraRef.current?.click()}
-          className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[140px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
+          className="flex flex-1 flex-col items-center justify-center gap-[8px] h-[100px] rounded-[12px] border-[2px] border-dashed border-black/20 bg-black/[0.03] text-black/40 hover:border-black/30 hover:bg-black/[0.05] transition-colors"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
             <circle cx="12" cy="13" r="4" />
           </svg>
@@ -117,7 +176,6 @@ function ResultView({
   onPersonOnSofa,
   onNewPhoto,
   onDownload,
-  onRetakeScale,
 }: {
   resultImage: string;
   showDisclaimer: boolean;
@@ -126,7 +184,6 @@ function ResultView({
   onPersonOnSofa: () => void;
   onNewPhoto: () => void;
   onDownload: () => void;
-  onRetakeScale: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
@@ -138,10 +195,10 @@ function ResultView({
             Sofa size is approximate.
           </p>
           <button
-            onClick={onRetakeScale}
+            onClick={onNewPhoto}
             className="text-[12px] text-amber-700 underline underline-offset-2 font-medium shrink-0 ml-[8px]"
           >
-            Improve accuracy
+            Retake photo
           </button>
         </div>
       )}
@@ -229,6 +286,8 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
   } = useAiRender();
 
   const [phase, setPhase] = useState<Phase>('upload');
+  const [selectedRef, setSelectedRef] = useState<ReferenceObject | null>(null);
+  const [userInput, setUserInput] = useState('');
 
   // Sync phase with hook status changes
   useEffect(() => {
@@ -241,11 +300,11 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
     uploadRoom(file);
   };
 
-  // Transition to scale step once room image is ready
+  // Once room image is ready, run scale detection on it and generate
   useEffect(() => {
     if (roomImage && phase === 'upload') {
-      // Check for LiDAR — if available, skip scale step
-      import('@/lib/scale/scale-resolver').then(async ({ hasLiDAR, resolveLidarScale }) => {
+      // Check for LiDAR — if available, skip reference detection
+      import('@/lib/scale/scale-resolver').then(async ({ hasLiDAR, resolveLidarScale, resolveScale }) => {
         if (await hasLiDAR()) {
           const result = await resolveLidarScale();
           if (result.pixelsPerCm !== null) {
@@ -254,29 +313,27 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
             return;
           }
         }
-        // No LiDAR or LiDAR failed — show reference object step
-        setPhase('scale');
+
+        // Try reference object detection on the room image
+        if (selectedRef) {
+          const userCm = selectedRef.requiresInput ? parseFloat(userInput) : undefined;
+          const result = await resolveScale(roomImage, selectedRef, userCm);
+          setScaleResult(result);
+        } else {
+          // No reference object selected — approximate sizing
+          setScaleResult({ method: 'none', pixelsPerCm: null, confidence: 0, disclaimer: true });
+        }
+
+        generate();
       });
     }
-  }, [roomImage, phase, setScaleResult, generate]);
-
-  const handleScaleResolved = (result: ScaleResult) => {
-    setScaleResult(result);
-    generate();
-  };
-
-  const handleSkipScale = () => {
-    setScaleResult({ method: 'none', pixelsPerCm: null, confidence: 0, disclaimer: true });
-    generate();
-  };
-
-  const handleRetakeScale = () => {
-    setPhase('scale');
-  };
+  }, [roomImage, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClose = () => {
     reset();
     setPhase('upload');
+    setSelectedRef(null);
+    setUserInput('');
     onClose();
   };
 
@@ -324,14 +381,12 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
           )}
 
           {phase === 'upload' && (
-            <UploadView onUpload={handleUpload} />
-          )}
-
-          {phase === 'scale' && roomImage && (
-            <RoomScaleStep
-              roomImage={roomImage}
-              onScaleResolved={handleScaleResolved}
-              onSkip={handleSkipScale}
+            <UploadView
+              onUpload={handleUpload}
+              selectedRef={selectedRef}
+              onSelectRef={setSelectedRef}
+              userInput={userInput}
+              onUserInputChange={setUserInput}
             />
           )}
 
@@ -348,7 +403,6 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
               onPersonOnSofa={() => regenerate(undefined, true)}
               onNewPhoto={handleNewPhoto}
               onDownload={handleDownload}
-              onRetakeScale={handleRetakeScale}
             />
           )}
 
