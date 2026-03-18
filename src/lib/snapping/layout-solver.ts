@@ -481,15 +481,21 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
       const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
       if (!seatCatalog) return;
 
-      // Pick armrest size matching seat depth.
-      const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
-      const sideId = pickSideForDimension(depthCm);
+      // Wing seats (rotated ±PI/2) swap width/depth in world space.
+      // Use width for wing armrests so the side matches the rotated extent.
+      const isWingSeat = Math.abs(Math.abs(edge.module.rotation[1]) - Math.PI / 2) < 0.01;
+      const dimCm = Math.round(
+        (isWingSeat ? seatCatalog.dimensions.width : seatCatalog.dimensions.depth) * 100
+      );
+      const sideId = pickSideForDimension(dimCm);
 
-      // Find backDepth if this seat has a back placed
+      // Find backDepth if this seat has a back placed.
+      // Wing seats have backs on "front" anchor; main row seats on "back".
       let backDepth = 0;
-      const backAnchor = edge.module.anchors.find((a) => a.id === 'back');
+      const backAnchorId = isWingSeat ? 'front' : 'back';
+      const backAnchor = edge.module.anchors.find((a) => a.id === backAnchorId);
       if (backAnchor?.occupied) {
-        const backConn = edge.module.connectedTo.find((c) => c.anchorId === 'back');
+        const backConn = edge.module.connectedTo.find((c) => c.anchorId === backAnchorId);
         if (backConn) {
           const backMod = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
           if (backMod) {
