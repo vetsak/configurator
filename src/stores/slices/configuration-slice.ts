@@ -8,7 +8,7 @@ import { computeAccessoryPlacement } from '@/lib/snapping/accessory-placement';
 export interface ConfigurationSlice {
   modules: PlacedModule[];
   presetId: string | null;
-  sidesUserRemoved: boolean;
+  armrestsUserRemoved: boolean;
   addModule: (module: PlacedModule) => void;
   removeModule: (instanceId: string) => void;
   updateModule: (instanceId: string, updates: Partial<PlacedModule>) => void;
@@ -27,31 +27,47 @@ export interface ConfigurationSlice {
   removeAccessory: (instanceId: string) => void;
   /** Rotate all modules by 180 degrees (PI) around the Y axis. */
   rotateSofa: () => void;
-  setSidesUserRemoved: (val: boolean) => void;
+  setArmrestsUserRemoved: (val: boolean) => void;
 }
 
 export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], ConfigurationSlice> = (set, get) => ({
   modules: [],
   presetId: null,
-  sidesUserRemoved: false,
+  armrestsUserRemoved: false,
 
   addModule: (module) =>
     set((state) => ({ modules: [...state.modules, module] })),
 
   removeModule: (instanceId) => {
-    const mod = get().modules.find((m) => m.instanceId === instanceId);
+    const modules = get().modules;
+    const mod = modules.find((m) => m.instanceId === instanceId);
+
+    // Check if this side was an armrest (connected via left/right anchor on host seat)
+    let isArmrest = false;
+    if (mod) {
+      const catalog = MODULE_CATALOG[mod.moduleId];
+      if (catalog?.type === 'side') {
+        // Find which seat anchor connected to this side
+        for (const other of modules) {
+          if (other.instanceId === instanceId) continue;
+          const conn = other.connectedTo.find((c) => c.targetInstanceId === instanceId);
+          if (conn && (conn.anchorId === 'left' || conn.anchorId === 'right')) {
+            isArmrest = true;
+            break;
+          }
+        }
+      }
+    }
+
     // Disconnect first, then remove
     get().disconnectModule(instanceId);
     set((state) => {
       const updates: Partial<ConfigurationSlice> = {
         modules: state.modules.filter((m) => m.instanceId !== instanceId),
       };
-      // Track user intent when manually removing a side module
-      if (mod) {
-        const catalog = MODULE_CATALOG[mod.moduleId];
-        if (catalog?.type === 'side') {
-          updates.sidesUserRemoved = true;
-        }
+      // Only track armrest removal (not back removal)
+      if (isArmrest) {
+        updates.armrestsUserRemoved = true;
       }
       return updates;
     });
@@ -66,9 +82,9 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
 
   setModules: (modules) => set({ modules }),
 
-  setPresetId: (presetId) => set({ presetId, sidesUserRemoved: false }),
+  setPresetId: (presetId) => set({ presetId, armrestsUserRemoved: false }),
 
-  clearConfiguration: () => set({ modules: [], presetId: null, sidesUserRemoved: false }),
+  clearConfiguration: () => set({ modules: [], presetId: null, armrestsUserRemoved: false }),
 
   disconnectModule: (instanceId) =>
     set((state) => {
@@ -110,11 +126,11 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
       connectModules(host, snap.hostAnchorId, newModule, snap.guestAnchorId);
       modules.push(newModule);
 
-      // Reset sidesUserRemoved when user manually adds a side back
+      // Reset armrestsUserRemoved when user manually adds a side back
       const catalog = MODULE_CATALOG[catalogId];
       const updates: Partial<ConfigurationSlice> = { modules };
       if (catalog?.type === 'side') {
-        updates.sidesUserRemoved = false;
+        updates.armrestsUserRemoved = false;
       }
       return updates;
     }),
@@ -162,5 +178,5 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
     set({ modules: rotated });
   },
 
-  setSidesUserRemoved: (val) => set({ sidesUserRemoved: val }),
+  setArmrestsUserRemoved: (val) => set({ armrestsUserRemoved: val }),
 });

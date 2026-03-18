@@ -401,7 +401,7 @@ function placeSideOnAnchor(
  * Strips existing sides first, then rebuilds from scratch.
  * Returns the full module array (seats + new sides).
  */
-export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
+export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): PlacedModule[] {
   // Deep-clone non-side modules, freeing anchors that were connected to sides
   const seats: PlacedModule[] = [];
   const sideInstanceIds = new Set(
@@ -437,21 +437,28 @@ export function autoPlaceSides(modules: PlacedModule[]): PlacedModule[] {
 
   const newSides: PlacedModule[] = [];
 
-  // 1. BACKS — place a side behind every seat with a free "back" anchor
+  // 1. BACKS — place a side behind every seat with a free back-facing anchor
+  //    Wing seats (rotated ±PI/2) use "front" anchor because the local "back"
+  //    direction rotates inward. The "front" anchor faces outward after rotation.
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
     if (!catalog || catalog.type !== 'seat') continue;
 
-    const backAnchor = seat.anchors.find((a) => a.id === 'back' && !a.occupied);
+    const isWingSeat = Math.abs(Math.abs(seat.rotation[1]) - Math.PI / 2) < 0.01;
+    const backAnchorId = isWingSeat ? 'front' : 'back';
+
+    const backAnchor = seat.anchors.find((a) => a.id === backAnchorId && !a.occupied);
     if (!backAnchor) continue;
 
     const widthCm = Math.round(catalog.dimensions.width * 100);
     const sideId = pickSideForDimension(widthCm);
-    const side = placeSideOnAnchor(seat, 'back', sideId);
+    const side = placeSideOnAnchor(seat, backAnchorId, sideId);
     if (side) newSides.push(side);
   }
 
   // 2. ARMRESTS — sides on the two outermost free left/right edges
+  if (skipArmrests) return [...seats, ...newSides];
+
   const freeEdges: { module: PlacedModule; anchorId: string; worldX: number }[] = [];
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
