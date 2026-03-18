@@ -437,23 +437,22 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
 
   const newSides: PlacedModule[] = [];
 
-  // 1. BACKS — place a side on the outer edge of every seat.
-  //    Main row seats: "back" anchor faces outward (behind the seat).
-  //    Wing seats (rotated ±PI/2): use "front" anchor instead — the local "back"
-  //    direction rotates inward after ±90° rotation, while "front" faces outward.
+  // 1. BACKS — place a side behind every main row seat (free "back" anchor).
+  //    Wing seats (rotated ±PI/2) do NOT get backs — only main row seats do.
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
     if (!catalog || catalog.type !== 'seat') continue;
 
+    // Skip wing seats — they don't get backs
     const isWingSeat = Math.abs(Math.abs(seat.rotation[1]) - Math.PI / 2) < 0.01;
-    const backAnchorId = isWingSeat ? 'front' : 'back';
+    if (isWingSeat) continue;
 
-    const backAnchor = seat.anchors.find((a) => a.id === backAnchorId && !a.occupied);
+    const backAnchor = seat.anchors.find((a) => a.id === 'back' && !a.occupied);
     if (!backAnchor) continue;
 
     const widthCm = Math.round(catalog.dimensions.width * 100);
     const sideId = pickSideForDimension(widthCm);
-    const side = placeSideOnAnchor(seat, backAnchorId, sideId);
+    const side = placeSideOnAnchor(seat, 'back', sideId);
     if (side) newSides.push(side);
   }
 
@@ -490,13 +489,11 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
       );
       const sideId = pickSideForDimension(dimCm);
 
-      // Find backDepth if this seat has a back placed.
-      // Wing seats have backs on "front" anchor; main row seats on "back".
+      // Find backDepth if this seat has a back placed
       let backDepth = 0;
-      const backAnchorId = isWingSeat ? 'front' : 'back';
-      const backAnchor = edge.module.anchors.find((a) => a.id === backAnchorId);
+      const backAnchor = edge.module.anchors.find((a) => a.id === 'back');
       if (backAnchor?.occupied) {
-        const backConn = edge.module.connectedTo.find((c) => c.anchorId === backAnchorId);
+        const backConn = edge.module.connectedTo.find((c) => c.anchorId === 'back');
         if (backConn) {
           const backMod = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
           if (backMod) {
