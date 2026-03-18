@@ -131,7 +131,7 @@ export function StepFinish() {
                 </div>
               )}
               {/* Name */}
-              <div className="absolute left-1/2 top-[84px] -translate-x-1/2 -translate-y-1/2 flex h-[26px] w-[78px] flex-col items-center justify-center text-center text-[9px] font-medium text-black leading-tight">
+              <div className="absolute left-1/2 top-[84px] -translate-x-1/2 -translate-y-1/2 flex h-[26px] w-[78px] flex-col items-center justify-center text-center text-[11px] font-medium text-black leading-tight">
                 <span>{item.name}</span>
               </div>
             </button>
