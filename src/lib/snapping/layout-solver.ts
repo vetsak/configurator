@@ -437,9 +437,10 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
 
   const newSides: PlacedModule[] = [];
 
-  // 1. BACKS — place a side behind every seat with a free back-facing anchor
-  //    Wing seats (rotated ±PI/2) use "front" anchor because the local "back"
-  //    direction rotates inward. The "front" anchor faces outward after rotation.
+  // 1. BACKS — place a side on the outer edge of every seat.
+  //    Main row seats: "back" anchor faces outward (behind the seat).
+  //    Wing seats (rotated ±PI/2): use "front" anchor instead — the local "back"
+  //    direction rotates inward after ±90° rotation, while "front" faces outward.
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
     if (!catalog || catalog.type !== 'seat') continue;
