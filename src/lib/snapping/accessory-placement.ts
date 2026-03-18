@@ -18,6 +18,9 @@ const SEAT_SURFACE_Y = 0.385;
 /** How far from seat center to push back pillows (fraction of half-depth) */
 const BACK_OFFSET_RATIO = 0.6;
 
+/** Lean angle in radians for single pillow against backrest (~15 degrees) */
+const BACKREST_LEAN_ANGLE = -0.26;
+
 interface PlacementResult {
   position: [number, number, number];
   rotation: [number, number, number];
@@ -70,16 +73,24 @@ export function computeAccessoryPlacement(
   if (!seatCatalog) return null;
 
   const existingOnSeat = accessoriesPerSeat.get(targetSeat.instanceId) ?? [];
+  const isSinglePillow = accessories.length === 0;
+  const isPillowOrJumbo =
+    accessory.type === 'pillow' || accessoryCatalogId.startsWith('jumbo-');
+
   const position = computePositionOnSeat(
     accessoryCatalogId,
     targetSeat,
     seatCatalog.dimensions,
     existingOnSeat.length,
+    isSinglePillow && isPillowOrJumbo,
   );
+
+  // Single pillow/jumbo leans against the backrest
+  const leanAngle = isSinglePillow && isPillowOrJumbo ? BACKREST_LEAN_ANGLE : 0;
 
   return {
     position,
-    rotation: [0, targetSeat.rotation[1], 0],
+    rotation: [leanAngle, targetSeat.rotation[1], 0],
     parentSeatId: targetSeat.instanceId,
   };
 }
@@ -123,6 +134,7 @@ function computePositionOnSeat(
   seat: PlacedModule,
   seatDims: { width: number; depth: number; height: number },
   existingCount: number,
+  leanAgainstBack = false,
 ): [number, number, number] {
   const seatY = seat.position[1];
   const surfaceY = seatY + SEAT_SURFACE_Y;
@@ -136,7 +148,11 @@ function computePositionOnSeat(
   const isBack = accessoryId === 'pillow-back';
   const isJumbo = accessoryId.startsWith('jumbo-');
 
-  if (isNoodle || isBack) {
+  if (leanAgainstBack) {
+    // Single pillow: push close to the rear edge to lean against backrest
+    localZ = -seatDims.depth * 0.4;
+    localX = 0;
+  } else if (isNoodle || isBack) {
     // Back pillows and noodles go toward the rear of the seat
     localZ = -seatDims.depth * BACK_OFFSET_RATIO * 0.5;
   } else if (isJumbo) {
@@ -147,8 +163,8 @@ function computePositionOnSeat(
     localZ = seatDims.depth * 0.1;
   }
 
-  // Spread multiple accessories left-to-right
-  if (existingCount > 0) {
+  // Spread multiple accessories left-to-right (skip for single backrest lean)
+  if (existingCount > 0 && !leanAgainstBack) {
     const spread = seatDims.width * 0.3;
     // Alternate left/right from center
     const offset = existingCount % 2 === 0 ? spread : -spread;

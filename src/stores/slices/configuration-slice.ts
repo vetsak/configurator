@@ -8,6 +8,7 @@ import { computeAccessoryPlacement } from '@/lib/snapping/accessory-placement';
 export interface ConfigurationSlice {
   modules: PlacedModule[];
   presetId: string | null;
+  sidesUserRemoved: boolean;
   addModule: (module: PlacedModule) => void;
   removeModule: (instanceId: string) => void;
   updateModule: (instanceId: string, updates: Partial<PlacedModule>) => void;
@@ -26,21 +27,34 @@ export interface ConfigurationSlice {
   removeAccessory: (instanceId: string) => void;
   /** Rotate all modules by 180 degrees (PI) around the Y axis. */
   rotateSofa: () => void;
+  setSidesUserRemoved: (val: boolean) => void;
 }
 
 export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], ConfigurationSlice> = (set, get) => ({
   modules: [],
   presetId: null,
+  sidesUserRemoved: false,
 
   addModule: (module) =>
     set((state) => ({ modules: [...state.modules, module] })),
 
   removeModule: (instanceId) => {
+    const mod = get().modules.find((m) => m.instanceId === instanceId);
     // Disconnect first, then remove
     get().disconnectModule(instanceId);
-    set((state) => ({
-      modules: state.modules.filter((m) => m.instanceId !== instanceId),
-    }));
+    set((state) => {
+      const updates: Partial<ConfigurationSlice> = {
+        modules: state.modules.filter((m) => m.instanceId !== instanceId),
+      };
+      // Track user intent when manually removing a side module
+      if (mod) {
+        const catalog = MODULE_CATALOG[mod.moduleId];
+        if (catalog?.type === 'side') {
+          updates.sidesUserRemoved = true;
+        }
+      }
+      return updates;
+    });
   },
 
   updateModule: (instanceId, updates) =>
@@ -52,9 +66,9 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
 
   setModules: (modules) => set({ modules }),
 
-  setPresetId: (presetId) => set({ presetId }),
+  setPresetId: (presetId) => set({ presetId, sidesUserRemoved: false }),
 
-  clearConfiguration: () => set({ modules: [], presetId: null }),
+  clearConfiguration: () => set({ modules: [], presetId: null, sidesUserRemoved: false }),
 
   disconnectModule: (instanceId) =>
     set((state) => {
@@ -96,7 +110,13 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
       connectModules(host, snap.hostAnchorId, newModule, snap.guestAnchorId);
       modules.push(newModule);
 
-      return { modules };
+      // Reset sidesUserRemoved when user manually adds a side back
+      const catalog = MODULE_CATALOG[catalogId];
+      const updates: Partial<ConfigurationSlice> = { modules };
+      if (catalog?.type === 'side') {
+        updates.sidesUserRemoved = false;
+      }
+      return updates;
     }),
 
   repositionModule: (instanceId, snap) =>
@@ -141,4 +161,6 @@ export const createConfigurationSlice: StateCreator<ConfigurationSlice, [], [], 
     }));
     set({ modules: rotated });
   },
+
+  setSidesUserRemoved: (val) => set({ sidesUserRemoved: val }),
 });

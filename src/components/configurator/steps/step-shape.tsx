@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useStore } from '@/stores';
 import { PresetModal } from '../preset-modal';
 
 export function StepShape() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const modalOpen = useStore((s) => s.presetModalOpen);
+  const setModalOpen = useStore((s) => s.setPresetModalOpen);
 
   return (
     <>

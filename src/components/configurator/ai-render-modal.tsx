@@ -13,11 +13,12 @@ interface AiRenderModalProps {
   onClose: () => void;
 }
 
-const PLACEMENTS: { id: Placement; label: string }[] = [
+const POSITION_OPTIONS: { id: string; label: string }[] = [
+  { id: 'person-on-sofa', label: 'Person on Sofa' },
+  { id: 'against-wall', label: 'Against Wall' },
   { id: 'center', label: 'Center' },
   { id: 'left', label: 'Left' },
   { id: 'right', label: 'Right' },
-  { id: 'against-wall', label: 'Against wall' },
 ];
 
 const ICONS: Record<string, React.FC<LucideProps>> = {
@@ -170,7 +171,6 @@ function GeneratingView({ roomImage }: { roomImage: string | null }) {
 
 function ResultView({
   resultImage,
-  showDisclaimer,
   onRegenerate,
   onReposition,
   onPersonOnSofa,
@@ -178,7 +178,6 @@ function ResultView({
   onDownload,
 }: {
   resultImage: string;
-  showDisclaimer: boolean;
   onRegenerate: () => void;
   onReposition: (p: Placement) => void;
   onPersonOnSofa: () => void;
@@ -189,42 +188,38 @@ function ResultView({
     <div className="flex flex-col gap-[12px]">
       <p className="text-[18px] font-medium text-black">Your sofa in the room</p>
 
-      {showDisclaimer && (
-        <div className="flex items-center justify-between rounded-[8px] bg-amber-50 border border-amber-200 px-[12px] py-[8px]">
-          <p className="text-[12px] text-amber-700">
-            Sofa size is approximate.
-          </p>
-          <button
-            onClick={onNewPhoto}
-            className="text-[12px] text-amber-700 underline underline-offset-2 font-medium shrink-0 ml-[8px]"
-          >
-            Retake photo
-          </button>
-        </div>
-      )}
-
       <img
         src={resultImage}
         alt="AI rendered sofa in room"
         className="w-full rounded-[12px] border border-black/10"
       />
 
+      <div className="flex items-center justify-between rounded-[8px] bg-amber-50 border border-amber-200 px-[12px] py-[8px]">
+        <p className="text-[12px] text-amber-700">
+          Sofa size is approximate.
+        </p>
+        <button
+          onClick={onNewPhoto}
+          className="text-[12px] text-amber-700 underline underline-offset-2 font-medium shrink-0 ml-[8px]"
+        >
+          Retake photo
+        </button>
+      </div>
+
       <div className="flex gap-[6px] overflow-x-auto">
-        {PLACEMENTS.map((p) => (
+        {POSITION_OPTIONS.map((p) => (
           <button
             key={p.id}
-            onClick={() => onReposition(p.id)}
+            onClick={() =>
+              p.id === 'person-on-sofa'
+                ? onPersonOnSofa()
+                : onReposition(p.id as Placement)
+            }
             className="shrink-0 rounded-[50px] border border-black/20 px-[14px] py-[6px] text-[12px] text-black"
           >
             {p.label}
           </button>
         ))}
-        <button
-          onClick={onPersonOnSofa}
-          className="shrink-0 rounded-[50px] border border-black/20 px-[14px] py-[6px] text-[12px] text-black"
-        >
-          Person on sofa
-        </button>
       </div>
 
       <div className="flex gap-[9px]">
@@ -362,11 +357,9 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
     URL.revokeObjectURL(url);
   };
 
-  const showDisclaimer = scaleResult?.disclaimer ?? true;
-
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent showCloseButton={false} className="max-w-[430px] rounded-[20px] p-0 border-none">
+      <DialogContent showCloseButton={false} className="max-w-[min(430px,calc(100vw-2rem))] rounded-[20px] p-0 border-none">
         <DialogTitle className="sr-only">AI Room Preview</DialogTitle>
         <div className="px-[18px] pb-[36px] pt-[21px]">
           {status !== 'generating' && (
@@ -397,7 +390,6 @@ export function AiRenderModal({ open, onClose }: AiRenderModalProps) {
           {phase === 'result' && resultImage && (
             <ResultView
               resultImage={resultImage}
-              showDisclaimer={showDisclaimer}
               onRegenerate={() => regenerate()}
               onReposition={(p) => regenerate(p)}
               onPersonOnSofa={() => regenerate(undefined, true)}

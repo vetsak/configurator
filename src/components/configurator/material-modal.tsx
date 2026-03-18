@@ -36,7 +36,6 @@ export function MaterialModal({ open, onOpenChange, initialFabricId }: MaterialM
 
   const handleSelectColor = (fabric: FabricDefinition, colour: ColourVariant) => {
     setMaterial({ fabricId: fabric.id, colourId: colour.id });
-    onOpenChange(false);
   };
 
   // Find the HQ texture for the currently selected or previewed colour
@@ -48,7 +47,7 @@ export function MaterialModal({ open, onOpenChange, initialFabricId }: MaterialM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[min(95vw,560px)] max-h-[85vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-[min(560px,calc(100vw-2rem))] max-h-[85vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-[20px] font-bold text-black flex items-center gap-2">
             {activeFabric.name}

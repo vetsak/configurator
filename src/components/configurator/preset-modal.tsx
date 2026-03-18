@@ -100,7 +100,7 @@ export function PresetModal({ open, onClose }: PresetModalProps) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-[460px] rounded-[20px] p-0 border-none"
+        className="max-w-[min(460px,calc(100vw-2rem))] rounded-[20px] p-0 border-none"
       >
         <div className="px-[24px] pb-[28px] pt-[28px]">
           {/* Header */}

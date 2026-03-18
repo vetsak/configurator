@@ -9,13 +9,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { TopDownSchematic, computeSchematicData, type SchematicData } from './top-down-schematic';
 
 export function RestoreConfigPrompt() {
   const [open, setOpen] = useState(false);
   const [savedDate, setSavedDate] = useState('');
+  const [schematic, setSchematic] = useState<SchematicData | null>(null);
   const setModules = useStore((s) => s.setModules);
   const setPresetId = useStore((s) => s.setPresetId);
   const setMaterial = useStore((s) => s.setMaterial);
+  const setPresetModalOpen = useStore((s) => s.setPresetModalOpen);
 
   useEffect(() => {
     const config = loadConfigFromLocal();
@@ -28,9 +31,13 @@ export function RestoreConfigPrompt() {
           year: 'numeric',
         })
       );
+      setSchematic(computeSchematicData(config.modules));
       setOpen(true);
+    } else {
+      // First visit — open shape selection
+      setPresetModalOpen(true);
     }
-  }, []);
+  }, [setPresetModalOpen]);
 
   const handleContinue = () => {
     const config = loadConfigFromLocal();
@@ -47,21 +54,28 @@ export function RestoreConfigPrompt() {
   const handleStartNew = () => {
     clearSavedConfig();
     setOpen(false);
+    setPresetModalOpen(true);
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleStartNew()}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-[400px] rounded-[20px] p-0 border-none"
+        className="max-w-[min(400px,calc(100vw-2rem))] rounded-[20px] p-0 border-none"
       >
         <div className="px-[24px] pb-[24px] pt-[28px]">
           <DialogTitle className="text-[20px] font-semibold text-black leading-tight mb-[6px]">
             Welcome back
           </DialogTitle>
-          <DialogDescription className="text-[13px] text-black/50 mb-[20px] leading-[1.45]">
+          <DialogDescription className="text-[13px] text-black/50 mb-[16px] leading-[1.45]">
             You have a saved configuration from {savedDate}. Would you like to continue where you left off?
           </DialogDescription>
+
+          {schematic && (
+            <div className="flex justify-center mb-[16px]">
+              <TopDownSchematic data={schematic} />
+            </div>
+          )}
 
           <div className="flex flex-col gap-[10px]">
             <button

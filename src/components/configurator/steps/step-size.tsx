@@ -168,13 +168,13 @@ export function StepSize() {
 
   const applyWidth = useCallback((targetWidth: number) => {
     const snapped = snapToNearestStep(targetWidth, widthSteps);
-    const sideIds = getSideModuleIds(modules);
     const shape = analyzeShape(modules);
+    const skipSides = useStore.getState().sidesUserRemoved;
 
     if (shape === 'linear') {
       const seatIds = buildSeatsForWidth(snapped, currentDepth);
       const placed = buildLinear(seatIds);
-      setModules(autoPlaceSides(placed));
+      setModules(skipSides ? placed : autoPlaceSides(placed));
     } else {
       // Shape-preserving resize: only change main row, keep wings
       const parts = getShapeParts(modules);
@@ -182,7 +182,7 @@ export function StepSize() {
       const leftWingIds = parts.leftWing.map((m) => m.moduleId);
       const rightWingIds = parts.rightWing.map((m) => m.moduleId);
       const placed = buildShape(shape, mainRowSeatIds, leftWingIds, rightWingIds, []);
-      setModules(autoPlaceSides(placed));
+      setModules(skipSides ? placed : autoPlaceSides(placed));
     }
   }, [modules, currentDepth, widthSteps, setModules]);
 
@@ -229,6 +229,7 @@ export function StepSize() {
     if (!depthMap) return;
 
     const shape = analyzeShape(modules);
+    const skipSides = useStore.getState().sidesUserRemoved;
     let substituted = false;
 
     const mapSeatId = (moduleId: string): string => {
@@ -254,14 +255,14 @@ export function StepSize() {
         seatIds.push(mapSeatId(mod.moduleId));
       }
       const placed = buildLinear(seatIds);
-      setModules(autoPlaceSides(placed));
+      setModules(skipSides ? placed : autoPlaceSides(placed));
     } else {
       const parts = getShapeParts(modules);
       const mainRowIds = parts.mainRow.map((m) => mapSeatId(m.moduleId));
       const leftWingIds = parts.leftWing.map((m) => mapSeatId(m.moduleId));
       const rightWingIds = parts.rightWing.map((m) => mapSeatId(m.moduleId));
       const placed = buildShape(shape, mainRowIds, leftWingIds, rightWingIds, []);
-      setModules(autoPlaceSides(placed));
+      setModules(skipSides ? placed : autoPlaceSides(placed));
     }
 
     if (substituted) {
