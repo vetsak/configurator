@@ -143,13 +143,15 @@ export function buildShape(
   }
 
   // 2. Build left wing (extends in +Z from first main row seat)
+  //    Wing seats are NOT rotated — same orientation as main row.
+  //    Corner "front" → wing "back", chained via "front" → "back".
   if (leftWingIds.length > 0 && placed.length > 0) {
-    buildWing(placed, placed[0], leftWingIds, -Math.PI / 2, 'front', 'left', 'right');
+    buildWing(placed, placed[0], leftWingIds, 0, 'front', 'back', 'front');
   }
 
   // 3. Build right wing (extends in +Z from last main row seat)
   if (rightWingIds.length > 0 && placed.length > 0) {
-    buildWing(placed, placed[mainRowIds.length - 1], rightWingIds, Math.PI / 2, 'front', 'right', 'left');
+    buildWing(placed, placed[mainRowIds.length - 1], rightWingIds, 0, 'front', 'back', 'front');
   }
 
   // 4. Center all seats around bounding box center
@@ -183,8 +185,7 @@ function buildWing(
   let prevAnchorId = cornerAnchor;
   let wingAnchorId = firstWingAnchor;
 
-  for (let wi = 0; wi < wingIds.length; wi++) {
-    const wingId = wingIds[wi];
+  for (const wingId of wingIds) {
     const catalog = MODULE_CATALOG[wingId];
     if (!catalog) continue;
 
@@ -207,24 +208,8 @@ function buildWing(
     const rotatedAnchorZ = -wingAnchorTemplate.position[0] * sinW + wingAnchorTemplate.position[2] * cosW;
 
     // Wing center = anchor world pos - rotated wing anchor offset
-    let wingX = anchorWorldX - rotatedAnchorX;
+    const wingX = anchorWorldX - rotatedAnchorX;
     const wingZ = anchorWorldZ - rotatedAnchorZ;
-
-    // For non-square seats, align the wing's outer edge flush with the corner seat's edge.
-    // After rotation, the wing's X extent = local depth, which may differ from the
-    // corner seat's width. Shift the wing so its outer edge matches.
-    if (wi === 0) {
-      const cornerCatalog = MODULE_CATALOG[cornerSeat.moduleId];
-      if (cornerCatalog) {
-        const cornerHalfW = cornerCatalog.dimensions.width / 2;
-        const wingHalfX = catalog.dimensions.depth / 2; // depth becomes X extent after rotation
-        const edgeGap = cornerHalfW - wingHalfX;
-        if (Math.abs(edgeGap) > 0.001) {
-          // Right wing (rotY > 0): shift right; Left wing (rotY < 0): shift left
-          wingX += rotY > 0 ? edgeGap : -edgeGap;
-        }
-      }
-    }
 
     const wingMod = createPlacedModule(wingId, [wingX, 0, wingZ], [0, rotY, 0]);
     placed.push(wingMod);
@@ -454,15 +439,12 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
 
   const newSides: PlacedModule[] = [];
 
-  // 1. BACKS — place a side behind every main row seat (free "back" anchor).
-  //    Wing seats (rotated ±PI/2) do NOT get backs — only main row seats do.
+  // 1. BACKS — place a side behind every seat with a free "back" anchor.
+  //    Wing seats naturally skip this because their "back" anchor is occupied
+  //    (connected to the corner seat's "front").
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
     if (!catalog || catalog.type !== 'seat') continue;
-
-    // Skip wing seats — they don't get backs
-    const isWingSeat = Math.abs(Math.abs(seat.rotation[1]) - Math.PI / 2) < 0.01;
-    if (isWingSeat) continue;
 
     const backAnchor = seat.anchors.find((a) => a.id === 'back' && !a.occupied);
     if (!backAnchor) continue;
@@ -498,13 +480,9 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
       const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
       if (!seatCatalog) return;
 
-      // Wing seats (rotated ±PI/2) swap width/depth in world space.
-      // Use width for wing armrests so the side matches the rotated extent.
-      const isWingSeat = Math.abs(Math.abs(edge.module.rotation[1]) - Math.PI / 2) < 0.01;
-      const dimCm = Math.round(
-        (isWingSeat ? seatCatalog.dimensions.width : seatCatalog.dimensions.depth) * 100
-      );
-      const sideId = pickSideForDimension(dimCm);
+      // Pick armrest size matching seat depth
+      const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
+      const sideId = pickSideForDimension(depthCm);
 
       // Find backDepth if this seat has a back placed
       let backDepth = 0;
