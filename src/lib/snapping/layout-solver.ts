@@ -183,7 +183,8 @@ function buildWing(
   let prevAnchorId = cornerAnchor;
   let wingAnchorId = firstWingAnchor;
 
-  for (const wingId of wingIds) {
+  for (let wi = 0; wi < wingIds.length; wi++) {
+    const wingId = wingIds[wi];
     const catalog = MODULE_CATALOG[wingId];
     if (!catalog) continue;
 
@@ -206,8 +207,24 @@ function buildWing(
     const rotatedAnchorZ = -wingAnchorTemplate.position[0] * sinW + wingAnchorTemplate.position[2] * cosW;
 
     // Wing center = anchor world pos - rotated wing anchor offset
-    const wingX = anchorWorldX - rotatedAnchorX;
+    let wingX = anchorWorldX - rotatedAnchorX;
     const wingZ = anchorWorldZ - rotatedAnchorZ;
+
+    // For non-square seats, align the wing's outer edge flush with the corner seat's edge.
+    // After rotation, the wing's X extent = local depth, which may differ from the
+    // corner seat's width. Shift the wing so its outer edge matches.
+    if (wi === 0) {
+      const cornerCatalog = MODULE_CATALOG[cornerSeat.moduleId];
+      if (cornerCatalog) {
+        const cornerHalfW = cornerCatalog.dimensions.width / 2;
+        const wingHalfX = catalog.dimensions.depth / 2; // depth becomes X extent after rotation
+        const edgeGap = cornerHalfW - wingHalfX;
+        if (Math.abs(edgeGap) > 0.001) {
+          // Right wing (rotY > 0): shift right; Left wing (rotY < 0): shift left
+          wingX += rotY > 0 ? edgeGap : -edgeGap;
+        }
+      }
+    }
 
     const wingMod = createPlacedModule(wingId, [wingX, 0, wingZ], [0, rotY, 0]);
     placed.push(wingMod);
