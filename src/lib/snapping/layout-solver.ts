@@ -520,21 +520,6 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
     }
   }
 
-  // 2b. Wing-end armrests — free "front" anchor on wing seats (open end of wing)
-  for (const seat of seats) {
-    const catalog = MODULE_CATALOG[seat.moduleId];
-    if (!catalog || catalog.type !== 'seat') continue;
-    if (!isWingSeat(seat)) continue; // only wing seats
-
-    const frontAnchor = seat.anchors.find((a) => a.id === 'front' && !a.occupied);
-    if (!frontAnchor) continue;
-
-    const widthCm = Math.round(catalog.dimensions.width * 100);
-    const sideId = pickSideForDimension(widthCm);
-    const side = placeSideOnAnchor(seat, 'front', sideId);
-    if (side) newSides.push(side);
-  }
-
   return [...seats, ...newSides];
 }
 
