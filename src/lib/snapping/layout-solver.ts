@@ -455,13 +455,35 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
     if (side) newSides.push(side);
   }
 
-  // 2. ARMRESTS — sides on the two outermost free left/right edges
+  // 2. ARMRESTS — sides on outermost edges of main row + ends of wings
   if (skipArmrests) return [...seats, ...newSides];
 
+  // Helper: detect if a seat is a wing seat (its "back" connects to another seat)
+  const isWingSeat = (seat: PlacedModule): boolean => {
+    const backConn = seat.connectedTo.find((c) => c.anchorId === 'back');
+    if (!backConn) return false;
+    const target = seats.find((s) => s.instanceId === backConn.targetInstanceId);
+    return target?.type === 'seat';
+  };
+
+  // Helper: find backDepth for armrest alignment
+  const getBackDepth = (seat: PlacedModule): number => {
+    const backAnchor = seat.anchors.find((a) => a.id === 'back');
+    if (!backAnchor?.occupied) return 0;
+    const backConn = seat.connectedTo.find((c) => c.anchorId === 'back');
+    if (!backConn) return 0;
+    const backMod = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
+    if (!backMod) return 0;
+    const backCatalog = MODULE_CATALOG[backMod.moduleId];
+    return backCatalog?.dimensions.depth ?? 0;
+  };
+
+  // 2a. Main row armrests — outermost free left/right anchors (excluding wing seats)
   const freeEdges: { module: PlacedModule; anchorId: string; worldX: number }[] = [];
   for (const seat of seats) {
     const catalog = MODULE_CATALOG[seat.moduleId];
     if (!catalog || catalog.type !== 'seat') continue;
+    if (isWingSeat(seat)) continue; // skip wing seats
 
     for (const anchor of seat.anchors) {
       if (anchor.occupied) continue;
@@ -476,27 +498,13 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
   if (freeEdges.length > 0) {
     freeEdges.sort((a, b) => a.worldX - b.worldX);
 
-    const placeArmrest = (edge: typeof freeEdges[0]) => {
+    const placeMainRowArmrest = (edge: typeof freeEdges[0]) => {
       const seatCatalog = MODULE_CATALOG[edge.module.moduleId];
       if (!seatCatalog) return;
 
-      // Pick armrest size matching seat depth
       const depthCm = Math.round(seatCatalog.dimensions.depth * 100);
       const sideId = pickSideForDimension(depthCm);
-
-      // Find backDepth if this seat has a back placed
-      let backDepth = 0;
-      const backAnchor = edge.module.anchors.find((a) => a.id === 'back');
-      if (backAnchor?.occupied) {
-        const backConn = edge.module.connectedTo.find((c) => c.anchorId === 'back');
-        if (backConn) {
-          const backMod = newSides.find((s) => s.instanceId === backConn.targetInstanceId);
-          if (backMod) {
-            const backCatalog = MODULE_CATALOG[backMod.moduleId];
-            if (backCatalog) backDepth = backCatalog.dimensions.depth;
-          }
-        }
-      }
+      const backDepth = getBackDepth(edge.module);
 
       const side = placeSideOnAnchor(edge.module, edge.anchorId, sideId, backDepth);
       if (!side) return;
@@ -504,12 +512,27 @@ export function autoPlaceSides(modules: PlacedModule[], skipArmrests = false): P
     };
 
     // Leftmost armrest
-    placeArmrest(freeEdges[0]);
+    placeMainRowArmrest(freeEdges[0]);
 
     // Rightmost armrest
     if (freeEdges.length >= 2) {
-      placeArmrest(freeEdges[freeEdges.length - 1]);
+      placeMainRowArmrest(freeEdges[freeEdges.length - 1]);
     }
+  }
+
+  // 2b. Wing-end armrests — free "front" anchor on wing seats (open end of wing)
+  for (const seat of seats) {
+    const catalog = MODULE_CATALOG[seat.moduleId];
+    if (!catalog || catalog.type !== 'seat') continue;
+    if (!isWingSeat(seat)) continue; // only wing seats
+
+    const frontAnchor = seat.anchors.find((a) => a.id === 'front' && !a.occupied);
+    if (!frontAnchor) continue;
+
+    const widthCm = Math.round(catalog.dimensions.width * 100);
+    const sideId = pickSideForDimension(widthCm);
+    const side = placeSideOnAnchor(seat, 'front', sideId);
+    if (side) newSides.push(side);
   }
 
   return [...seats, ...newSides];
